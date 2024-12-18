@@ -15,6 +15,7 @@ $routes->group('login', function ($routes) {
     $routes->add('', 'User::viewLogin', $this->auth);
     $routes->add('auth', 'User::loginAuth', $this->auth);
 });
+$routes->add('exceldump', 'Home::excelDump', $this->noauth);
 // Routes Master User
 $routes->group('user', function ($routes) {
     $routes->add('', 'User::index', $this->noauth);
