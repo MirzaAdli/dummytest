@@ -4,57 +4,56 @@ namespace App\Controllers;
 
 use App\Controllers\BaseController;
 use App\Helpers\Datatables\Datatables;
-use App\Models\MProject;
+use App\Models\MProduct;
 use CodeIgniter\HTTP\ResponseInterface;
 use Exception;
 
-class Project extends BaseController
+class Product extends BaseController
 {
     protected $db;
     protected $bc;
-    protected $projectModel;
+    protected $productModel;
 
     public function __construct()
     {
-        $this->projectModel = new MProject();
+        $this->productModel = new MProduct();
         $this->bc = [
             [
                 'Setting',
-                'Project'
+                'Product'
             ]
         ];
     }
 
     public function index()
     {
-        return view('master/project/v_project', [
-            'title' => 'Project',
+        return view('master/product/v_product', [
+            'title' => 'Product',
             'akses' => null,
             'breadcrumb' => $this->bc,
-            'section' => 'Setting Project',
+            'section' => 'Setting Product',
         ]);
     }
 
     public function datatable()
     {
-        $table = Datatables::method([MProject::class, 'datatable'], 'searchable')
+        $table = Datatables::method([MProduct::class, 'datatable'], 'searchable')
             ->make();
 
         $table->updateRow(function ($db, $no) {
-            $btn_edit = "<button type='button' class='btn btn-sm btn-warning' onclick=\"modalForm('Update Project - " . $db->projectname . "', 'modal-lg', '" . getURL('project/form/' . encrypting($db->id)) . "', {identifier: this})\"><i class='bx bx-edit-alt'></i></button>";
-            $btn_hapus = "<button type='button' class='btn btn-sm btn-danger' onclick=\"modalDelete('Delete Project - " . $db->projectname . "', {'link':'" . getURL('project/delete') . "', 'id':'" . encrypting($db->id) . "', 'pagetype':'table'})\"><i class='bx bx-trash'></i></button>";
+            $btn_edit = "<button type='button' class='btn btn-sm btn-warning' onclick=\"modalForm('Update Product - " . $db->productname . "', 'modal-lg', '" . getURL('product/form/' . encrypting($db->id)) . "', {identifier: this})\"><i class='bx bx-edit-alt'></i></button>";
+            $btn_hapus = "<button type='button' class='btn btn-sm btn-danger' onclick=\"modalDelete('Delete Product - " . $db->productname . "', {'link':'" . getURL('product/delete') . "', 'id':'" . encrypting($db->id) . "', 'pagetype':'table'})\"><i class='bx bx-trash'></i></button>";
 
-            $foto_project = !empty($db->filepath)
-                ? "<img src='" . htmlspecialchars($db->filepath) .  "' alt='foto project' width='50' style='border-radius: 50%; object-fit: cover;'>"
-                : "<img( src:'path/to/default.png' alt='foto project' width='50' height:'50' style='border-radius:50%; object-fit: cover;'>";
-
+            $foto_product = !empty($db->filepath)
+                ? "<img src='" . htmlspecialchars($db->filepath) .  "' alt='foto product' width='50' style='border-radius: 50%; object-fit: cover;'>"
+                : "<img( src:'path/to/default.png' alt='foto product' width='50' height:'50' style='border-radius:50%; object-fit: cover;'>";
             return [
                 $no,
-                $db->projectname,
-                $db->description,
-                $db->startdate,
-                $db->enddate,
-                $foto_project,
+                $db->productname,
+                $db->category,
+                $db->price,
+                $db->stock,
+                $foto_product,
                 "<div style='display:flex;align-items:center;justify-content:center;'>$btn_edit&nbsp;$btn_hapus</div>"
             ];
         });
@@ -67,20 +66,17 @@ class Project extends BaseController
         $row = [];
         if ($id != '') {
             $id = decrypting($id);
-            $row = $this->projectModel->getOne($id);
+            $row = $this->productModel->getOne($id);
             // Check if the data exists
             if (empty($row)) {
-                throw new \CodeIgniter\Exceptions\PageNotFoundException("Project with ID $id not found.");
+                throw new \CodeIgniter\Exceptions\PageNotFoundException("Product with ID $id not found.");
             }
         }
 
-        $row['startdate'] = $row['startdate'] ?? '';
-        $row['enddate'] = $row['enddate'] ?? '';
-
-        $dt['view'] = view('master/project/v_form', [
+        $dt['view'] = view('master/product/v_form', [
             'form_type' => $form_type,
             'row' => $row,
-            'projectid' => $id
+            'productid' => $id
         ]);
         $dt['csrfToken'] = csrf_hash();
         echo json_encode($dt);
@@ -88,20 +84,20 @@ class Project extends BaseController
 
     public function addData()
     {
-        $projectname = $this->request->getPost('projectname');
-        $description = $this->request->getPost('description');
-        $startdate = $this->request->getPost('startdate');
-        $enddate = $this->request->getPost('enddate');
+        $productname = $this->request->getPost('productname');
+        $category = $this->request->getPost('category');
+        $price = $this->request->getPost('price');
+        $stock = $this->request->getPost('stock');
         $filepath = $this->request->getFile('filepath');
         $res = [];
 
         $this->db->transBegin();
         try {
-            if (empty($projectname)) throw new Exception("Project Name is required!");
-            if (empty($description)) throw new Exception("Description is required!");
-            if (empty($startdate)) throw new Exception("Start Date is required!");
-            if (empty($enddate)) throw new Exception("End Date is required!");
-            if (empty($filepath->isValid())) throw new Exception("filepath is required!");
+            if (empty($productname)) throw new Exception("Product is required!");
+            if (empty($category)) throw new Exception("category is required!");
+            if (empty($price)) throw new Exception("price is required!");
+            if (empty($stock)) throw new Exception("stokc is required!");
+            if (empty($filepath->isValid())) throw new Exception("img is required!");
 
             $allowedExceptions = ['jpg', 'jpeg', 'png'];
             $extension = $filepath->getExtension();
@@ -109,14 +105,14 @@ class Project extends BaseController
                 throw new Exception("Invalid file type. Only ");
             }
             $newName = $filepath->getExtension();
-            $filepath->move('upload/project/', $newName);
-            $filepath = 'upload/project/' . $newName;
+            $filepath->move('upload/product/', $newName);
+            $filepath = 'upload/product/' . $newName;
 
-            $this->projectModel->store([
-                'projectname' => $projectname,
-                'description' => $description,
-                'startdate' => $startdate,
-                'enddate' => $enddate,
+            $this->productModel->store([
+                'productname' => $productname,
+                'category' => $category,
+                'price' => $price,
+                'stock' => $stock,
                 'filepath' => $filepath,
                 'createddate' => date('Y-m-d H:i:s'),
                 'createdby' => 1, // Adjust for actual user
@@ -125,7 +121,7 @@ class Project extends BaseController
             ]);
             $res = [
                 'sukses' => '1',
-                'pesan' => 'Project added successfully!',
+                'pesan' => 'Product added successfully!',
                 'dbError' => db_connect()
             ];
             $this->db->transCommit();
@@ -142,22 +138,24 @@ class Project extends BaseController
 
     public function updateData()
     {
-        $projectid = $this->request->getPost('id');
-        $projectname = $this->request->getPost('projectname');
-        $description = $this->request->getPost('description');
-        $startdate = $this->request->getPost('startdate');
-        $enddate = $this->request->getPost('enddate');
+        $productid = $this->request->getPost('id');
+        $productname = $this->request->getPost('productname');
+        $category = $this->request->getPost('category');
+        $price = $this->request->getPost('price');
+        $stock = $this->request->getPost('stock');
         $filepath = $this->request->getFile('filepath');
         $res = [];
 
         $this->db->transBegin();
         try {
-            if (empty($projectname)) throw new Exception("Project Name is required!");
-            if (empty($description)) throw new Exception("Description is required!");
-            if (empty($startdate)) throw new Exception("Start Date is required!");
-            if (empty($enddate)) throw new Exception("End Date is required!");
+            // Validasi data yang diperlukan
+            if (empty($productname)) throw new Exception("Product Name is required!");
+            if (empty($category)) throw new Exception("Category is required!");
+            if (empty($price)) throw new Exception("Price is required!");
+            if (empty($stock)) throw new Exception("Stock is required!");
+
             // Ambil data produk lama untuk mendapatkan gambar sebelumnya
-            $oldData = $this->projectModel->getOne($projectid);
+            $oldData = $this->productModel->getOne($productid);
             if (empty($oldData)) throw new Exception("Product not found!");
 
             // Jika file baru diunggah, validasi file tersebut
@@ -171,8 +169,8 @@ class Project extends BaseController
 
                 // Simpan file baru
                 $newName = $filepath->getRandomName();
-                $filepath->move('upload/project', $newName);
-                $newFilePath = 'upload/project/' . $newName;
+                $filepath->move('upload/product', $newName);
+                $newFilePath = 'upload/product/' . $newName;
 
                 // Hapus file lama jika ada
                 if (file_exists($oldData['filepath'])) {
@@ -180,21 +178,22 @@ class Project extends BaseController
                 }
             }
 
+            // Update data produk
             $data = [
-                'projectname' => $projectname,
-                'description' => $description,
-                'startdate' => $startdate,
-                'enddate' => $enddate,
-                'filepath' => $newFilePath,
+                'productname' => $productname,
+                'category' => $category,
+                'price' => $price,
+                'stock' => $stock,
+                'filepath' => $newFilePath, // Gunakan file baru jika diunggah, atau file lama
                 'updateddate' => date('Y-m-d H:i:s'),
                 'updatedby' => 1, // Adjust for actual user
             ];
 
-            $this->projectModel->edit($data, $projectid);
+            $this->productModel->edit($data, $productid);
 
             $res = [
                 'sukses' => '1',
-                'pesan' => 'Project updated successfully!',
+                'pesan' => 'Product updated successfully!',
             ];
 
             $this->db->transCommit();
@@ -211,19 +210,19 @@ class Project extends BaseController
 
     public function deleteData()
     {
-        $projectId = decrypting($this->request->getPost('id'));
+        $productId = decrypting($this->request->getPost('id'));
         $res = [];
 
         $this->db->transBegin();
         try {
-            $row = $this->projectModel->getOne($projectId);
-            if (empty($row)) throw new Exception("Project not found!");
+            $row = $this->productModel->getOne($productId);
+            if (empty($row)) throw new Exception("Product not found!");
 
-            $this->projectModel->destroy('id', $projectId);
+            $this->productModel->destroy('id', $productId);
 
             $res = [
                 'sukses' => '1',
-                'pesan' => 'Project deleted successfully!',
+                'pesan' => 'Product deleted successfully!',
             ];
 
             $this->db->transCommit();
