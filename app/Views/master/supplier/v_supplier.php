@@ -52,7 +52,9 @@
                     { "data": "address" },
                     { "data": "phone" },
                     { "data": "email" },
-                    { "data": "filepath" },
+                    { "data": "filepath", "render": function(data, type, row) {
+                        return '<a href="' + data + '" target="_blank">' + data + '</a>';
+                    }},
                     { "data": "actions" }
                 ]
             });

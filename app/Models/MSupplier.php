@@ -29,8 +29,13 @@ class MSupplier extends Model
 
     public function store($data)
     {
-        return $this->builder->insert($data);
+        if (!$this->builder->insert($data)) {
+            log_message('error', 'Database Error: ' . json_encode($this->dbs->error()));
+            return false;
+        }
+        return true;
     }
+
 
     public function searchable()
     {

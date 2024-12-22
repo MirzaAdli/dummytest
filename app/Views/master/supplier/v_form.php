@@ -1,27 +1,33 @@
-<form id="form-supplier" class="form" style="padding-inline: 0px;">
+<form id="form-supplier" class="form" style="padding-inline: 0px;" enctype="multipart/form-data">
     <div class="form-group">
         <?php if ($form_type == 'edit') { ?>
             <input type="hidden" id="id" name="id" value="<?= (($form_type == 'edit') ? $userid : '') ?>">
         <?php } ?>
         <label for="suppliername">Supplier Name : </label>
-        <input type="text" class="form-input fs-7" id="suppliername" name="suppliername" value="<?= (($form_type == 'edit') ? $row['suppliername'] : '') ?>" placeholder="@ex: PT. Supplier" required>
+        <input type="text" class="form-input fs-7" id="suppliername" name="suppliername"
+            value="<?= (($form_type == 'edit') ? $row['suppliername'] : '') ?>" placeholder="@ex: PT. Supplier"
+            required>
     </div>
 
     <div class="form-group">
         <label for="address">Address : </label>
-        <input type="text" class="form-input fs-7" id="address" name="address" value="<?= (($form_type == 'edit') ? $row['address'] : '') ?>" placeholder="@ex: Supplier Address" required>
+        <input type="text" class="form-input fs-7" id="address" name="address"
+            value="<?= (($form_type == 'edit') ? $row['address'] : '') ?>" placeholder="@ex: Supplier Address" required>
     </div>
     <div class="form-group">
         <label for="phone">Phone : </label>
-        <input type="text" class="form-input fs-7" id="phone" name="phone" value="<?= (($form_type == 'edit') ? $row['phone'] : '') ?>" placeholder="@ex: Phone Number" required>
+        <input type="text" class="form-input fs-7" id="phone" name="phone"
+            value="<?= (($form_type == 'edit') ? $row['phone'] : '') ?>" placeholder="@ex: Phone Number" required>
     </div>
     <div class="form-group">
         <label for="email">Email : </label>
-        <input type="email" class="form-input fs-7" id="email" name="email" value="<?= (($form_type == 'edit') ? $row['email'] : '') ?>" placeholder="@ex: example@gmail.com" required>
+        <input type="email" class="form-input fs-7" id="email" name="email"
+            value="<?= (($form_type == 'edit') ? $row['email'] : '') ?>" placeholder="@ex: example@gmail.com" required>
     </div>
     <div class="form-group">
         <label for="filepath">FilePath : </label>
-        <input type="text" class="form-input fs-7" id="filepath" name="filepath" value="<?= (($form_type == 'edit') ? $row['filepath'] : '') ?>" placeholder="@ex: ur file path" required>
+        <input type="file" class="form-input fs-7" id="filepath" name="filepath"
+            value="<?= (($form_type == 'edit') ? $row['filepath'] : '') ?>" required>
     </div>
     <input type="hidden" id="csrf_token_form" name="<?= csrf_token() ?>">
     <div class="modal-footer">
@@ -37,47 +43,50 @@
 </form>
 
 <script>
-    $(document).ready(function() {
-        $('#btn-submit').click(function() {
+    $(document).ready(function () {
+        $('#btn-submit').click(function () {
             $('#form-supplier').trigger('submit');
-        })
-        $("#form-supplier").on('submit', function(e) {
+        });
+
+        $('#form-supplier').on('submit', function (e) {
             e.preventDefault();
             let csrf = decrypter($("#csrf_token").val());
-            $("#csrf_token_form").val(csrf);
-            let form_type = "<?= $form_type ?>";
-            let link = "<?= getURL('supplier/add') ?>"
+            $("#csrf_token").val(csrf);
+            let form_type = '<?= $form_type ?>';
+            let link = '<?= getURL('supplier/add') ?>';
             if (form_type == 'edit') {
-                link = "<?= getURL('supplier/update') ?>"
+                link = '<?= getURL('supplier/update') ?>';
             }
-            let data = $(this).serialize();
+            let formData = new FormData(this);
             $.ajax({
-                type: 'post',
+                type: 'POST',
                 url: link,
-                data: data,
-                dataType: "json",
-                success: function(response) {
+                data: formData,
+                contentType: false,
+                processData: false,
+                dataType: 'json',
+                success: function (response) {
                     $("#csrf_token").val(encrypter(response.csrfToken));
                     $("#csrf_token_form").val("");
-                    let message = response.message;
-                    let notif = 'success'
-                    if (response.status != 1) {
+                    let pesan = response.pesan;
+                    let notif = 'success';
+                    if (response.sukses != 1) {
                         notif = 'error';
                     }
-                    if (response.message != undefined) {
-                        message = response.message;
+                    if (response.pesan != undefined) {
+                        pesan = response.pesan;
                     }
-                    showNotif(notif, message);
+                    showNotif(notif, pesan);
                     if (response.status == 1) {
                         close_modal('modaldetail');
                         tbl.ajax.reload();
                     }
                 },
-                error: function(xhr, ajaxOptions, thrownError) {
-                    showError(thrownError + ", please contact administrator for the further")
+                error: function (xhr, ajaxOptions, thrownError) {
+                    showError(thrownError + ", please contact administrator for the further");
                 }
             });
             return false;
-        })
-    })
+        });
+    });
 </script>
