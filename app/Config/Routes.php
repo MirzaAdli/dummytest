@@ -48,7 +48,16 @@ $routes->group('project', function ($routes) {
     $routes->add('update', 'Project::updateData', $this->noauth);
     $routes->add('delete', 'Project::deleteData', $this->noauth);
 });
-
+// Routes Master Product
+$routes->group('product', function ($routes) {
+    $routes->add('', 'Product::index', $this->noauth);
+    $routes->add('table', 'Product::datatable', $this->noauth);
+    $routes->add('add', 'Product::addData', $this->noauth);
+    $routes->add('form', 'Product::forms', $this->noauth);
+    $routes->add('form/(:any)', 'Product::forms/$1', $this->noauth);
+    $routes->add('update', 'Product::updateData', $this->noauth);
+    $routes->add('delete', 'Product::deleteData', $this->noauth);
+});
 // -------------------------------------------------------->
 // Log Out
 $routes->add('logout', 'User::logOut');

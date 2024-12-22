@@ -6,6 +6,7 @@ use CodeIgniter\Model;
 
 class MUser extends Model
 {
+    protected $dbs;
     protected $table = 'msuser as us';
     public function __construct()
     {

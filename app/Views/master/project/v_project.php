@@ -18,6 +18,7 @@
                             <td class="tableheader">description</td>
                             <td class="tableheader">start date</td>
                             <td class="tableheader">End Date</td>
+                            <td class="tableheader">file path</td>
                             <td class="tableheader">Actions</td>
                         </tr>
                     </thead>

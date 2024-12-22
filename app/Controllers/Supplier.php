@@ -9,6 +9,7 @@ use Exception;
 
 class Supplier extends BaseController
 {
+    protected $db;
     protected $bc;
     protected $MSupplier;
 
