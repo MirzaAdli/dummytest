@@ -26,7 +26,15 @@ $routes->group('user', function ($routes) {
     $routes->add('delete', 'User::deleteData', $this->noauth);
 });
 // Routing Master Dibawah Sini ---------------------------
-
+$routes->group('customer', function ($routes) { 
+    $routes->add('', 'Customer::index', $this->noauth);
+    $routes->add('table', 'Customer::datatable', $this->noauth);
+    $routes->add('add', 'Customer::addData', $this->noauth);
+    $routes->add('form', 'Customer::forms', $this->noauth); // Form tanpa parameter
+    $routes->add('form/(:num)', 'Customer::forms/$1', $this->noauth); // Form dengan parameter
+    $routes->add('update', 'Customer::updateData', $this->noauth);
+    $routes->add('delete', 'Customer::deleteData', $this->noauth);
+});
 // -------------------------------------------------------->
 // Log Out
 $routes->add('logout', 'User::logOut');
