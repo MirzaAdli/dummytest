@@ -49,9 +49,9 @@
         if (form_type == 'edit') {
             $('#btn-reset').attr('disabled', true);
         }
-        // $('#btn-submit').click(function () {
-        //     $('#form-supplier').trigger('submit');
-        // });
+        $('#btn-submit').click(function () {
+            $('#form-supplier').trigger('submit');
+        });
         $('#form-supplier').on('submit', function (e) {
             e.preventDefault();
             let csrf = decrypter($("#csrf_token").val());
@@ -72,13 +72,13 @@
                 success: function (response) {
                     $("#csrf_token").val(encrypter(response.csrfToken));
                     $("#csrf_token_form").val("");
-                    let pesan = response.pesan;
+                    let pesan = response.message;
                     let notif = 'success';
                     if (response.status != 1) {
                         notif = 'error';
                     }
-                    if (response.pesan != undefined) {
-                        pesan = response.pesan;
+                    if (response.message != undefined) {
+                        pesan = response.message;
                     }
                     showNotif(notif, pesan);
                     if (response.status == 1) {

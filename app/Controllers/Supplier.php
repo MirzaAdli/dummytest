@@ -95,7 +95,7 @@ class Supplier extends BaseController
 
             $res = [
                 'status' => '1',
-                'pesan' => 'Supplier added successfully',
+                'message' => 'Supplier added successfully',
                 "dbError" => db_connect()
             ];
             $this->db->transCommit();
@@ -103,7 +103,7 @@ class Supplier extends BaseController
             $this->db->transRollback();
             $res = [
                 'sukses' => '0',
-                'pesan' => $e->getMessage(),
+                'message' => $e->getMessage(),
                 'traceString' => $e->getTraceAsString(),
                 'dbError' => db_connect()->error()
             ];
