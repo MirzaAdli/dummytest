@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Controllers;
 
 use App\Controllers\BaseController;
@@ -41,13 +42,13 @@ class Supplier extends BaseController
         $row = array();
         if ($id != '') {
             $id = decrypting($id);
-            $row = $this->MSupplier->find($id); 
+            $row = $this->MSupplier->find($id);
         }
         $dt['view'] = view('master/supplier/v_form', [
             'form_type' => $form_type,
             'row' => $row,
             'userid' => $id,
-            'title' => 'Supplier Form' 
+            'title' => 'Supplier Form'
         ]);
         $dt['csrfToken'] = csrf_hash();
         echo json_encode($dt);
@@ -87,9 +88,9 @@ class Supplier extends BaseController
                 'phone' => $phone,
                 'email' => $email,
                 'filepath' => $fileurl,
-                'createdby' => 1, 
+                'createdby' => getSession('userid'),
                 'createddate' => date('Y-m-d H:i:s'),
-                'updatedby' => 1,
+                'updatedby' => getSession('userid'),
                 'updateddate' => date('Y-m-d H:i:s')
             ]);
 
@@ -156,7 +157,7 @@ class Supplier extends BaseController
                 'address' => $address,
                 'phone' => $phone,
                 'email' => $email,
-                'updatedby' => 1,
+                'updatedby' => getSession('userid'),
                 'updateddate' => date('Y-m-d H:i:s')
             ];
 
@@ -210,7 +211,6 @@ class Supplier extends BaseController
                 'message' => 'Data deleted successfully!',
                 'dbError' => db_connect()->error()
             ];
-
         } catch (Exception $e) {
             $res = [
                 'status' => '0',
@@ -223,5 +223,4 @@ class Supplier extends BaseController
         $this->db->transComplete();
         echo json_encode($res);
     }
-
 }

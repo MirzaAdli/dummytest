@@ -128,3 +128,4 @@ nb-configuration.xml
 
 /results/
 /phpunit*.xml
+public/images/uploads/

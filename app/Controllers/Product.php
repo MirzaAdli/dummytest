@@ -115,9 +115,9 @@ class Product extends BaseController
                 'stock' => $stock,
                 'filepath' => $filepath,
                 'createddate' => date('Y-m-d H:i:s'),
-                'createdby' => 1, // Adjust for actual user
+                'createdby' => getSession('userid'), // Adjust for actual user
                 'updateddate' => date('Y-m-d H:i:s'),
-                'updatedby' => 1, // Adjust for actual user
+                'updatedby' => getSession('userid'), // Adjust for actual user
             ]);
             $res = [
                 'sukses' => '1',
@@ -186,7 +186,7 @@ class Product extends BaseController
                 'stock' => $stock,
                 'filepath' => $newFilePath, // Gunakan file baru jika diunggah, atau file lama
                 'updateddate' => date('Y-m-d H:i:s'),
-                'updatedby' => 1, // Adjust for actual user
+                'updatedby' => getSession('userid'), // Adjust for actual user
             ];
 
             $this->productModel->edit($data, $productid);

@@ -84,9 +84,9 @@ class Customer extends BaseController
             $btn_edit = "<button type='button' class='btn btn-sm btn-warning' onclick=\"modalForm('Update Customer - " . $db->customername . "', 'modal-lg', '" . getURL('customer/form/' . ($db->id)) . "', {identifier: this})\"><i class='bx bx-edit-alt'></i></button>";
             $btn_hapus = "<button type='button' class='btn btn-sm btn-danger' onclick=\"modalDelete('Delete Customer - " . $db->customername . "', {'link':'" . getURL('customer/delete') . "', 'id':'" . encrypting($db->id) . "', 'pagetype':'table'})\"><i class='bx bx-trash'></i></button>";
 
-            $foto_profil = !empty($db->filepath) 
-            ? "<img src='" . htmlspecialchars($db->filepath) . "' alt='Foto Profil' width='50' height='50' style='border-radius: 50%; object-fit: cover;'>"
-            : "<img src='path/to/default-image.png' alt='Foto Profil Default' width='50' height='50' style='border-radius: 50%; object-fit: cover;'>";
+            $foto_profil = !empty($db->filepath)
+                ? "<img src='" . htmlspecialchars($db->filepath) . "' alt='Foto Profil' width='50' height='50' style='border-radius: 50%; object-fit: cover;'>"
+                : "<img src='path/to/default-image.png' alt='Foto Profil Default' width='50' height='50' style='border-radius: 50%; object-fit: cover;'>";
 
             return [
                 $no,
@@ -155,9 +155,9 @@ class Customer extends BaseController
                 'phone' => $telepon,
                 'email' => $email,
                 'createddate' => date('Y-m-d H:i:s'),
-                'createdby' => 1,
+                'createdby' => getSession('userid'),
                 'updateddate' => date('Y-m-d H:i:s'),
-                'updatedby' => 1,
+                'updatedby' => getSession('userid'),
             ]);
 
             $res = [
@@ -203,7 +203,7 @@ class Customer extends BaseController
                 'phone' => $telepon,
                 'email' => $email,
                 'updateddate' => date('Y-m-d H:i:s'),
-                'updatedby' => 1,
+                'updatedby' => getSession('userid'),
             ];
 
             if ($foto->isValid()) {

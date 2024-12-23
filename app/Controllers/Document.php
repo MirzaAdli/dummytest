@@ -104,9 +104,9 @@ class Document extends BaseController
                 'description' => $description,
                 'filepath' => $filePath,
                 'createddate' => date('Y-m-d H:i:s'),
-                'createdby' => 1,
+                'createdby' => getSession('userid'),
                 'updateddate' => date('Y-m-d H:i:s'),
-                'updatedby' => 1,
+                'updatedby' => getSession('userid'),
             ]);
 
             $db->transCommit();
@@ -132,7 +132,7 @@ class Document extends BaseController
 
     public function updateData()
     {
-        
+
         $userid = $this->request->getPost('id');
         $documentname = $this->request->getPost('name');
         $description = $this->request->getPost('description');
@@ -149,7 +149,7 @@ class Document extends BaseController
                 'description' => $description,
                 'dokumen' => $filepath,
                 'updateddate' => date('Y-m-d H:i:s'),
-                'updatedby' => $userid,
+                'updatedby' => getSession('userid'),
             ];
 
             if ($filepath && $filepath->isValid()) {
@@ -159,7 +159,7 @@ class Document extends BaseController
                 if (!in_array($extension, $allowedExtensions)) {
                     throw new Exception("Format foto tidak valid, hanya docx, doc, pdf, xlsx diperbolehkan!");
                 }
-    
+
                 // Hapus file lama jika ada
                 $oldFilePath = $this->MDocument->getOne($userid)['filepath'];
                 if (file_exists($oldFilePath)) {
@@ -170,8 +170,8 @@ class Document extends BaseController
                 $newName = $filepath->getRandomName();
                 $filepath->move('uploads/document', $newName);
                 $data['filepath'] = 'uploads/document' . $newName;
-            
-    
+
+
                 // Hapus file lama jika ada
                 $oldFilePath = $this->MDocument->getOne($userid)['filepath'];
                 if (file_exists($oldFilePath)) {
@@ -224,15 +224,5 @@ class Document extends BaseController
         }
         $this->db->transComplete();
         echo json_encode($res);
-    }
-
-    public function logOut()
-    {
-        $userid = session()->get('userid');
-        $row = $this->MDocument->getOne($userid);
-        if (!empty($row)) {
-            destroySession();
-        }
-        return redirect('login');
     }
 }

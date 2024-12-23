@@ -40,7 +40,7 @@ $routes->group('document', function ($routes) {
 });
 
 
-$routes->group('customer', function ($routes) { 
+$routes->group('customer', function ($routes) {
     $routes->add('', 'Customer::index', $this->noauth);
     $routes->add('table', 'Customer::datatable', $this->noauth);
     $routes->add('add', 'Customer::addData', $this->noauth);
@@ -50,7 +50,7 @@ $routes->group('customer', function ($routes) {
     $routes->add('delete', 'Customer::deleteData', $this->noauth);
 });
 
-$routes->group('category', function ($routes) { 
+$routes->group('category', function ($routes) {
     $routes->add('', 'Category::index', $this->noauth);
     $routes->add('table', 'Category::datatable', $this->noauth);
     $routes->add('add', 'Category::addData', $this->noauth);
