@@ -13,13 +13,13 @@
             <table class="table table-bordered table-master fs-7 w-100" id="dataTable">
                 <thead>
                     <tr>
-                        <th class="tableheader">No</th>
-                        <th class="tableheader">Supplier</th>
-                        <th class="tableheader">Address</th>
-                        <th class="tableheader">Telephone</th>
-                        <th class="tableheader">Email</th>
-                        <th class="tableheader">File Path</th>
-                        <th class="tableheader">Actions</th>
+                        <td class="tableheader">No</td>
+                        <td class="tableheader">Supplier</td>
+                        <td class="tableheader">Address</td>
+                        <td class="tableheader">Telephone</td>
+                        <td class="tableheader">Email</td>
+                        <td class="tableheader">File Path</td>
+                        <td class="tableheader">Actions</td>
                     </tr>
                 </thead>
                 <tbody>
@@ -29,7 +29,7 @@
     </div>
 </div>
 <script>
-    $(document).ready(function () {
+    $(document).ready(function() {
         if (!$.fn.DataTable.isDataTable('#dataTable')) {
             $('#dataTable').DataTable({
                 "processing": true,
@@ -38,6 +38,7 @@
                     "url": "<?= base_url('supplier/table') ?>",
                     "type": "POST",
                     "dataSrc": function (json) {
+                        // Ensure the data structure is correct
                         if (!json.data) {
                             console.error('Data structure is incorrect:', json);
                             return [];
@@ -51,33 +52,11 @@
                     { "data": "address" },
                     { "data": "phone" },
                     { "data": "email" },
-                    {
-                        "data": "filepath", "render": function (data) {
-                            return '<a href="' + data + '" target="_blank">' + data + '</a>';
-                        }
-                    },
-                    {
-                        "data": "actions", "render": function (data, type, row) {
-                            return `
-                                <button class="btn btn-danger btn-sm" onclick="modalDelete('${row.suppliername}', { link: '<?= base_url('supplier/delete') ?>', id: ${row.id} })">
-                                    Delete
-                                </button>`;
-                        }
-                    }
-                ],
-                "pagingType": "full_numbers",
-                "lengthMenu": [5, 10, 25, 50],
-                "language": {
-                    "search": "Filter records:",
-                    "lengthMenu": "Display _MENU_ records per page",
-                    "zeroRecords": "No matching records found",
-                    "info": "Showing page _PAGE_ of _PAGES_",
-                    "infoEmpty": "No records available",
-                    "infoFiltered": "(filtered from _MAX_ total records)"
-                },
-                "dom": '<"row"<"col-sm-6"l><"col-sm-6"f>>' +
-                    '<"row"<"col-sm-12"tr>>' +
-                    '<"row"<"col-sm-5"i><"col-sm-7"p>>'
+                    { "data": "filepath", "render": function(data, type, row) {
+                        return '<a href="' + data + '" target="_blank">' + data + '</a>';
+                    }},
+                    { "data": "actions" }
+                ]
             });
         }
     });
@@ -95,7 +74,7 @@
                 type: 'POST',
                 url: data.link + '/' + data.id,
                 dataType: 'json',
-                success: function (response) {
+                success: function(response) {
                     if (response.success == 1) {
                         alert(response.message);
                         $('#dataTable').DataTable().ajax.reload();
@@ -103,7 +82,7 @@
                         alert(response.message);
                     }
                 },
-                error: function (xhr, ajaxOptions, thrownError) {
+                error: function(xhr, ajaxOptions, thrownError) {
                     alert(thrownError);
                 }
             });
