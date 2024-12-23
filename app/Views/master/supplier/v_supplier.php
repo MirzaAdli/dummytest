@@ -10,7 +10,7 @@
     </div>
     <div class="card-body">
         <div class="table-responsive margin-t-14p">
-            <table class="table table-bordered table-master fs-7 w-100" id="dataTable">
+            <table class="table table-bordered table-responsive-lg table-master fs-7 w-100" id="dataTable">
                 <thead>
                     <tr>
                         <td class="tableheader">No</td>
