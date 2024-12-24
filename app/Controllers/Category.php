@@ -7,6 +7,9 @@ use App\Helpers\Datatables\Datatables;
 use App\Models\MCategory;
 use App\Models\MUser;
 use CodeIgniter\HTTP\ResponseInterface;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use PhpOffice\PhpSpreadsheet\IOFactory;
 use Exception;
 
 class Category extends BaseController
@@ -31,7 +34,7 @@ class Category extends BaseController
             'title' => 'Category',
             'akses' => null,
             'breadcrumb' => $this->bc,
-            'section' => 'Setting User',
+            'section' => 'Setting Category',
         ]);
     }
 
@@ -41,41 +44,7 @@ class Category extends BaseController
             'title' => 'Login'
         ]);
     }
-
-    public function loginAuth()
-    {
-        $username = $this->request->getPost('username');
-        $password = $this->request->getPost('password');
-        $res = array();
-        $this->db->transBegin();
-        try {
-            if (empty($username) || empty($password)) throw new Exception("Username atau Password harus diisi!");
-            $row = $this->categoryModel->getByName($username);
-            if (empty($row)) throw new Exception("User tidak terdaftar di sistem!");
-            if (password_verify($password, $row['password'])) {
-                setSession('userid', $row['id']);
-                setSession('name', $row['fullname']);
-                $res = [
-                    'sukses' => '1',
-                    'pesan' => 'Berhasil Login',
-                    'link' => base_url('user'),
-                    'dbError' => db_connect()->error()
-                ];
-            } else {
-                throw new Exception("Password user salah, coba lagi!");
-            }
-        } catch (Exception $e) {
-            $res = [
-                'sukses' => '0',
-                'pesan' => $e->getMessage(),
-                'traceString' => $e->getTraceAsString(),
-                'dbError' => db_connect()->error()
-            ];
-        }
-        $this->db->transComplete();
-        echo json_encode($res);
-    }
-
+   
     public function datatable()
     {
         $table = Datatables::method([MCategory::class, 'datatable'], 'searchable')
