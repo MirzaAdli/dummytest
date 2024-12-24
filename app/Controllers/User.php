@@ -7,7 +7,7 @@ use App\Helpers\Datatables\Datatables;
 use App\Models\MUser;
 use CodeIgniter\HTTP\ResponseInterface;
 use Exception;
-
+use Fpdf\Fpdf;
 
 class User extends BaseController
 {
@@ -243,5 +243,33 @@ class User extends BaseController
             destroySession();
         }
         return redirect('login');
+    }
+
+    public function printPDF()
+    {
+        $pdf = new Fpdf();
+        $pdf->AddPage();
+        $pdf->SetFont('Arial', 'B', 12);
+
+        $pdf->Cell(10, 10, 'No', 1, 0, 'C');
+        $pdf->Cell(40, 10, 'Name', 1, 0, 'C');
+        $pdf->Cell(40, 10, 'Username', 1, 0, 'C');
+        $pdf->Cell(60, 10, 'Email', 1, 0, 'C');
+        $pdf->Cell(40, 10, 'Telephone', 1, 1, 'C');
+
+        $pdf->SetFont('Arial', '', 12);
+        $datas = $this->userModel->datatable()->get()->getResultArray();
+
+        $no = 1;
+        foreach ($datas as $row) {
+            $pdf->Cell(10, 10, $no++, 1, 0, 'C');
+            $pdf->Cell(40, 10, $row['fullname'], 1, 0, 'L');
+            $pdf->Cell(40, 10, $row['username'], 1, 0, 'L');
+            $pdf->Cell(60, 10, $row['email'], 1, 0, 'L');
+            $pdf->Cell(40, 10, $row['telp'], 1, 1, 'L');
+        }
+
+        $pdf->Output('D', 'user_data.pdf');
+        exit;
     }
 }

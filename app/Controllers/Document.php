@@ -35,9 +35,6 @@ class Document extends BaseController
         ]);
     }
 
-
-
-
     public function datatable()
     {
         $table = Datatables::method([MDocument::class, 'datatable'], 'searchable')
@@ -124,15 +121,11 @@ class Document extends BaseController
                 'traceString' => $e->getTraceAsString(),
             ];
         }
-
         echo json_encode($res);
     }
 
-
-
     public function updateData()
     {
-
         $userid = $this->request->getPost('id');
         $documentname = $this->request->getPost('name');
         $description = $this->request->getPost('description');

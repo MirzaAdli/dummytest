@@ -26,6 +26,7 @@ $routes->group('user', function ($routes) {
     $routes->add('form/(:any)', 'User::forms/$1', $this->noauth);
     $routes->add('update', 'User::updateData', $this->noauth);
     $routes->add('delete', 'User::deleteData', $this->noauth);
+    $routes->add('printpdf', 'User::printPDF', $this->noauth);
 });
 
 //document ROUTES
