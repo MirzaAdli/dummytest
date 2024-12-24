@@ -46,6 +46,7 @@ class Project extends BaseController
         $table->updateRow(function ($db, $no) {
             $btn_edit = "<button type='button' class='btn btn-sm btn-warning' onclick=\"modalForm('Update Project - " . $db->projectname . "', 'modal-lg', '" . getURL('project/form/' . encrypting($db->id)) . "', {identifier: this})\"><i class='bx bx-edit-alt'></i></button>";
             $btn_hapus = "<button type='button' class='btn btn-sm btn-danger' onclick=\"modalDelete('Delete Project - " . $db->projectname . "', {'link':'" . getURL('project/delete') . "', 'id':'" . encrypting($db->id) . "', 'pagetype':'table'})\"><i class='bx bx-trash'></i></button>";
+            $btn_print = "<button type='button' class='btn btn-sm btn-info' onclick=\"window.open('" . getURL('project/generatePdf/' . encrypting($db->id)) . "', '_blank')\"><i class='bx bx-printer'></i></button>";
 
             $foto_project = !empty($db->filepath)
                 ? "<img src='" . htmlspecialchars($db->filepath) . "' alt='foto project' width='50' style='border-radius: 50%; object-fit: cover;'>"
@@ -58,7 +59,7 @@ class Project extends BaseController
                 $db->startdate,
                 $db->enddate,
                 $foto_project,
-                "<div style='display:flex;align-items:center;justify-content:center;'>$btn_edit&nbsp;$btn_hapus</div>"
+                "<div style='display:flex;align-items:center;justify-content:center;'>$btn_edit&nbsp;$btn_hapus&nbsp;$btn_print</div>"
             ];
         });
         $table->toJson();
@@ -297,50 +298,66 @@ class Project extends BaseController
     }
 
     public function generatePdf()
-    {
-        // Include FPDF library
-        $pdf = new Fpdf();
+{
+    // Include FPDF library
+    $pdf = new Fpdf();
 
-        // Add a page
-        $pdf->AddPage();
+    // Add a page
+    $pdf->AddPage();
 
-        // Set font for the title
-        $pdf->SetFont('Arial', 'B', 16);
+    // Set font for the title
+    $pdf->SetFont('Arial', 'B', 16);
 
-        // Add a title
-        $pdf->Cell(200, 10, 'Project data', 0, 1, 'C');
+    // Add a title
+    $pdf->Cell(200, 10, 'Project Data', 0, 1, 'C');
 
-        // Set font for body
-        $pdf->SetFont('Arial', '', 12);
+    // Set font for body
+    $pdf->SetFont('Arial', '', 12);
 
-        // Create a table for displaying project data (optional)
-        $pdf->SetFont('Arial', 'B', 12);
-        $pdf->Cell(40, 10, 'Project Name', 1);
-        $pdf->Cell(50, 10, 'Description', 1);
-        $pdf->Cell(40, 10, 'Start Date', 1);
-        $pdf->Cell(40, 10, 'End Date', 1);
-        $pdf->Ln();
+    // Create a table header
+    $pdf->SetFont('Arial', 'B', 12);
+    $pdf->Cell(40, 10, 'Project Name', 1, 0, 'C');
+    $pdf->Cell(80, 10, 'Description', 1, 0, 'C');
+    $pdf->Cell(35, 10, 'Start Date', 1, 0, 'C');
+    $pdf->Cell(35, 10, 'End Date', 1, 1, 'C');
 
-        // Retrieve project data from the model
-        $projects = $this->projectModel->findAll();
+    // Retrieve project data from the model
+    $projects = $this->projectModel->findAll();
 
-        $pdf->SetFont('Arial', '', 12);
-        foreach ($projects as $project) {
-            // Project Name
-            $pdf->Cell(40, 10, $project['projectname'], 1);
+    $pdf->SetFont('Arial', '', 12);
 
-            // Description (using MultiCell to allow wrapping)
-            $pdf->MultiCell(50, 10, $project['description'], 1);
+    foreach ($projects as $project) {
+        // Calculate the height for the description field
+        $startX = $pdf->GetX();
+        $startY = $pdf->GetY();
+        $cellWidth = 80; // Width of the description column
+        $lineHeight = 6; // Height of each line in MultiCell
 
-            // Start Date and End Date (they are still displayed with Cell)
-            $pdf->Cell(40, 10, $project['startdate'], 1);
-            $pdf->Cell(40, 10, $project['enddate'], 1);
+        // Save the current position and create a MultiCell for description
+        $pdf->SetXY($startX + 40, $startY); // Move to the description column
+        $pdf->MultiCell($cellWidth, $lineHeight, $project['description'], 1, 'L');
 
-            // Move to the next line after the description, since MultiCell affects the height of the row
-            $pdf->Ln();
-        }
+        // Get the height of the MultiCell
+        $descriptionHeight = $pdf->GetY() - $startY;
 
-        // Output the PDF to the browser for download
-        $pdf->Output('D', 'projects.pdf');
+        // Calculate the max height of the row
+        $rowHeight = max($descriptionHeight, 10); // Ensure at least the default cell height
+
+        // Reset cursor to draw the Project Name cell
+        $pdf->SetXY($startX, $startY);
+        $pdf->Cell(40, $rowHeight, $project['projectname'], 1, 0, 'C');
+
+        // Move cursor to Start Date column
+        $pdf->SetXY($startX + 120, $startY);
+        $pdf->Cell(35, $rowHeight, $project['startdate'], 1, 0, 'C');
+
+        // Move cursor to End Date column
+        $pdf->SetXY($startX + 155, $startY);
+        $pdf->Cell(35, $rowHeight, $project['enddate'], 1, 1, 'C');
     }
+
+    // Output the PDF to the browser for download
+    $pdf->Output('D', 'projects.pdf');
+}
+
 }

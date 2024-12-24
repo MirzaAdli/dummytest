@@ -3,7 +3,7 @@
 <div class="main-content content margin-t-4">
     <div class="card p-x shadow-sm w-100">
         <div class="card-header dflex align-center justify-end">
-            <button class="btn btn-warning dflex align-center margin-r-2"
+            <button class="btn btn-primary dflex align-center margin-r-2"
                 onclick="window.location.href='<?= getURL('project/generatePdf') ?>'">
                 <i class="bx bx-printer margin-r-2"></i>
                 <span class="fw-normal fs-7">Print PDF</span>
