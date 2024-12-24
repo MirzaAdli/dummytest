@@ -6,6 +6,7 @@ use App\Controllers\BaseController;
 use App\Helpers\Datatables\Datatables;
 use App\Models\MProduct;
 use CodeIgniter\HTTP\ResponseInterface;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Exception;
 
 class Product extends BaseController
@@ -235,5 +236,65 @@ class Product extends BaseController
         }
         $this->db->transComplete();
         echo json_encode($res);
+    }
+    public function exportexcel()
+    {
+        $data = $this->productModel->getAll();
+        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('Product_Data');
+        
+        $headerStyle = [
+            'font' => [
+                'bold' => true,
+                'color' => ['argb' => 'FFFFFF'],
+            ],
+            'fill' => [
+                'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
+                'startColor' => ['argb' => '4CAF50'],
+            ],
+            'borders' => [
+                'allBorders' => [
+                    'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
+                ],
+            ],
+        ];
+        $dataStyle = [
+            'borders' => [
+                'allBorders' => [
+                    'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
+                ],
+            ],
+        ];
+        $headers = ['product Name', 'category', 'price', 'stock', 'File Path'];
+        $columns = range('A', 'E');
+
+        foreach ($columns as $key => $column) {
+            $sheet->setCellValue($column . '1', $headers[$key]);
+        }
+        $sheet->getStyle('A1:E1')->applyFromArray($headerStyle);
+        $i = 2;
+        foreach ($data as $row) {
+            $sheet->setCellValue('A' . $i, $row['productname']);
+            $sheet->setCellValue('B' . $i, $row['category']);
+            $sheet->setCellValue('C' . $i, $row['price']);
+            $sheet->setCellValue('D' . $i, $row['stock']);
+            $sheet->setCellValue('E' . $i, $row['filepath']);
+            $i++;
+        }
+        $sheet->getStyle('A2:E' . ($i - 1))->applyFromArray($dataStyle);
+        foreach ($columns as $column) {
+            $sheet->getColumnDimension($column)->setAutoSize(true);
+        }
+
+        $writer = new Xlsx($spreadsheet);
+        $filename = 'Product' . date('dmy') . '.xlsx';
+
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header('Content-Disposition: attachment;filename="' . $filename . '"');
+        header('Cache-Control: max-age=0');
+
+        $writer->save('php://output');
+        exit;
     }
 }

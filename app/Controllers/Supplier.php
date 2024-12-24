@@ -285,7 +285,7 @@ class Supplier extends BaseController
         }
 
         $writer = new Xlsx($spreadsheet);
-        $filename = 'Supplier_Zaevanza_' . date('Ymd') . '.xlsx';
+        $filename = 'Supplier_Zaevanza_' . date('dmY') . '.xlsx';
 
         header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
         header('Content-Disposition: attachment;filename="' . $filename . '"');
