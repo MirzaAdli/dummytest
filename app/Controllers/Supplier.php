@@ -127,6 +127,7 @@ class Supplier extends BaseController
         $table->updateRow(function ($db, $no) {
             $btn_edit = "<button type='button' class='btn btn-sm btn-warning' onclick=\"modalForm('Update User - " . $db->suppliername . "', 'modal-lg', '" . getURL('supplier/form/' . encrypting($db->id)) . "', {identifier: this})\"><i class='bx bx-edit-alt'></i></button>";
             $btn_hapus = "<button type='button' class='btn btn-sm btn-danger' onclick=\"modalDelete('Delete User - " . $db->suppliername . "', {'link':'" . getURL('supplier/delete') . "', 'id':'" . encrypting($db->id) . "', 'pagetype':'table'})\"><i class='bx bx-trash'></i></button>";
+            $btn_print = "<button type='button' class='btn btn-sm btn-info' onclick=\"window.open('" . getURL('supplier/pdf/' . encrypting($db->id)) . "', '_blank')\"><i class='bx bx-printer'></i></button>";
             return [
                 $no,
                 $db->suppliername,
@@ -134,7 +135,7 @@ class Supplier extends BaseController
                 $db->phone,
                 $db->email,
                 $db->filepath,
-                "<div style='display:flex;align-items:center;justify-content:center;'>$btn_edit&nbsp;$btn_hapus</div>"
+                "<div style='display:flex;align-items:center;justify-content:center;'>$btn_edit&nbsp;$btn_hapus&nbsp;$btn_print</div>"
             ];
         });
         $table->toJson();
@@ -296,18 +297,20 @@ class Supplier extends BaseController
         exit;
     }
 
-    public function fpdf()
+    public function fpdf($id = null)
     {
         $pdf = new FPDF();
-        $data = $this->MSupplier->getAll();
+        $data = $id ? $this->MSupplier->find(decrypting($id)) : $this->MSupplier->getAll();
 
         $pdf->SetTitle('Supplier Data');
         $pdf->AddPage();
         $pdf->SetFont('Arial', 'B', 12);
 
+        // Title
         $pdf->Cell(0, 10, 'Supplier Data Report', 0, 1, 'C');
         $pdf->Ln(10);
 
+        // Header
         $pdf->Cell(10, 10, 'No', 1, 0, 'C');
         $pdf->Cell(40, 10, 'Supplier Name', 1, 0, 'C');
         $pdf->Cell(40, 10, 'Address', 1, 0, 'C');
@@ -315,17 +318,30 @@ class Supplier extends BaseController
         $pdf->Cell(60, 10, 'Email', 1, 1, 'C'); 
 
         $pdf->SetFont('Arial', '', 12);
-        $i = 1;
-        foreach ($data as $row) {
-            $pdf->Cell(10, 10, $i, 1, 0, 'C');
-            $pdf->Cell(40, 10, $row['suppliername'], 1, 0, 'L');
-            $pdf->Cell(40, 10, $row['address'], 1, 0, 'L');
-            $pdf->Cell(40, 10, $row['phone'], 1, 0, 'L');
-            $pdf->Cell(60, 10, $row['email'], 1, 1, 'L'); 
-            $i++;
+        if ($id) {
+            if (is_array($data) || is_object($data)) {
+                $pdf->Cell(10, 10, 1, 1, 0, 'C');
+                $pdf->Cell(40, 10, $data['suppliername'], 1, 0, 'L');
+                $pdf->Cell(40, 10, $data['address'], 1, 0, 'L');
+                $pdf->Cell(40, 10, $data['phone'], 1, 0, 'L');
+                $pdf->Cell(60, 10, $data['email'], 1, 1, 'L');
+            } else {
+                // Handle the case where $data is not an array or object
+                $pdf->Cell(0, 10, 'No data found', 1, 1, 'C');
+            }
+        } else {
+            $i = 1;
+            foreach ($data as $row) {
+                $pdf->Cell(10, 10, $i, 1, 0, 'C');
+                $pdf->Cell(40, 10, $row['suppliername'], 1, 0, 'L');
+                $pdf->Cell(40, 10, $row['address'], 1, 0, 'L');
+                $pdf->Cell(40, 10, $row['phone'], 1, 0, 'L');
+                $pdf->Cell(60, 10, $row['email'], 1, 1, 'L'); 
+                $i++;
+            }
         }
 
-        $pdf->Output('D', 'Supplier_Data_'.'tanggal_'.date('Y-m-d').'.pdf');
+        $pdf->Output('D', 'Supplier_Data.pdf');
         exit;
     }
 }
