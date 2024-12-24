@@ -72,6 +72,7 @@ $routes->group('supplier', function ($routes) {
     $routes->add('update', 'Supplier::update', $this->noauth);
     $routes->add('export', 'Supplier::exportexcel', $this->noauth);
     $routes->add('delete', 'Supplier::delete', $this->noauth);
+    $routes->add('pdf', 'Supplier::Fpdf', $this->noauth);
 });
 
 // Routes Master Project
