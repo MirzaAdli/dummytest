@@ -237,12 +237,8 @@ class User extends BaseController
 
     public function logOut()
     {
-        $userid = getSession('userid');
-        $row = $this->userModel->getOne($userid);
-        if (!empty($row)) {
-            destroySession();
-        }
-        return redirect('login');
+        session()->destroy();
+        return redirect()->to(base_url('login'));
     }
 
     public function printPDF()
@@ -272,4 +268,76 @@ class User extends BaseController
         $pdf->Output('D', 'user_data.pdf');
         exit;
     }
+
+    public function exportexcel()
+    {
+        //memanggil data dari db
+        $data = $this->userModel->getAll();
+        //memanggil library/package untuk import excell
+        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        //==== $sheet->setTitle('Product_Data');
+
+        //digunakan untuk mengatur style di excellnya
+        $headerStyle = [
+            'font' => [
+                'bold' => true,
+                'color' => ['argb' => 'FFFFFF'],
+            ],
+            'fill' => [
+                'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
+                'startColor' => ['argb' => '4CAF50'],
+            ],
+            'borders' => [
+                'allBorders' => [
+                    'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
+                ],
+            ],
+        ];
+        $dataStyle = [
+            'borders' => [
+                'allBorders' => [
+                    'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
+                ],
+            ],
+        ];
+        //digunakan untuk menulis header kolom pertama
+        $headers = ['Name', 'Username', 'Email', 'Telephone', 'File Path'];
+        $columns = range('A', 'E');
+
+        foreach ($columns as $key => $column) {
+            $sheet->setCellValue($column . '1', $headers[$key]);
+        }
+        // untuk memasang style dimana ingin ditempatkan
+        $sheet->getStyle('A1:E1')->applyFromArray($headerStyle);
+        $i = 2;
+        // untuk menulis data yang diambil dari db ke excell
+        foreach ($data as $row) {
+            $sheet->setCellValue('A' . $i, $row['fullname']);
+            $sheet->setCellValue('B' . $i, $row['username']);
+            $sheet->setCellValue('C' . $i, $row['email']);
+            $sheet->setCellValue('D' . $i, $row['telp']);
+            $sheet->setCellValue('E' . $i, $row['filepath']);
+            $i++;
+        }
+        // untuk memasang style dimana ingin ditempatkan
+        $sheet->getStyle('A2:E' . ($i - 1))->applyFromArray($dataStyle);
+        foreach ($columns as $column) {
+            $sheet->getColumnDimension($column)->setAutoSize(true);
+        }
+        //untuk mengirim file excell dari php ke browser tanpa  menyimpan file di server/local
+        // membuat writer excell
+        $writer = new Xlsx($spreadsheet);
+        $filename = 'User' . date('dmy') . '.xlsx';
+        // untuk memberitahu ke browser itu adalah file excell
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        //memaksa download dengan nama yang ditentukan
+        header('Content-Disposition: attachment;filename="' . $filename . '"');
+        //untuk mencegah cache
+        header('Cache-Control: max-age=0');
+        //output file ke browser
+        $writer->save('php://output');
+        exit;
+    }
+
 }

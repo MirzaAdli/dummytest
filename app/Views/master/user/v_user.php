@@ -12,6 +12,11 @@
                 <i class="bx bx-plus-circle margin-r-2"></i>
                 <span class="fw-normal fs-7">Add New</span>
             </button>
+
+            <button class="btn btn-primary dflex align-center margin-l-2" onclick="downloadexcel()">
+                <i class="bx bx-download margin-r-2"></i>
+                <span class="fw-normal fs-7">Export</span>
+            </button>
         </div>
         <div class="card-body">
             <div class="table-responsive margin-t-14p">

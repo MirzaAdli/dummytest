@@ -128,13 +128,14 @@ class Supplier extends BaseController
             $btn_edit = "<button type='button' class='btn btn-sm btn-warning' onclick=\"modalForm('Update User - " . $db->suppliername . "', 'modal-lg', '" . getURL('supplier/form/' . encrypting($db->id)) . "', {identifier: this})\"><i class='bx bx-edit-alt'></i></button>";
             $btn_hapus = "<button type='button' class='btn btn-sm btn-danger' onclick=\"modalDelete('Delete User - " . $db->suppliername . "', {'link':'" . getURL('supplier/delete') . "', 'id':'" . encrypting($db->id) . "', 'pagetype':'table'})\"><i class='bx bx-trash'></i></button>";
             $btn_print = "<button type='button' class='btn btn-sm btn-info' onclick=\"window.open('" . getURL('supplier/pdf/' . encrypting($db->id)) . "', '_blank')\"><i class='bx bx-printer'></i></button>";
+            $img = !empty($db->filepath) ? "<img src='" . base_url($db->filepath) . "' alt='Category Image' style='width:60px;height:auto;border-radius:4px;'>" : "<span class='text-muted'>No Image</span>";
             return [
                 $no,
                 $db->suppliername,
                 $db->address,
                 $db->phone,
                 $db->email,
-                $db->filepath,
+                $img,
                 "<div style='display:flex;align-items:center;justify-content:center;'>$btn_edit&nbsp;$btn_hapus&nbsp;$btn_print</div>"
             ];
         });

@@ -15,6 +15,10 @@
                 <i class="bx bx-download margin-r-2"></i>
                 <span class="fw-normal fs-7">Export Excel</span>
             </button>
+            <button class="btn btn-primary dflex align-center margin-l-2" onclick="return modalForm('Import Customer', 'modal-lg', '<?= getURL('customer/formImport') ?>')">
+                <i class="bx bx-download margin-r-2"></i>
+                <span class="fw-normal fs-7">Import</span>
+            </button>
         </div>
         <div class="card-body">
             <div class="table-responsive margin-t-14p">

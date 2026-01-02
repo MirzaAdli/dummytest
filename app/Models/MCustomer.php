@@ -8,6 +8,12 @@ class MCustomer extends Model
 {
     protected $db;
     protected $table = 'mscustomer as us';
+    protected $primaryKey = 'id';
+    protected $allowedFields = [
+        'customername', 'address', 'phone', 'email', 'filepath',
+        'createddate', 'createdby', 'updateddate', 'updatedby'
+    ];
+
     public function __construct()
     {
         $this->db = db_connect();

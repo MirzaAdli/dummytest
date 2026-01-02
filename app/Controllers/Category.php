@@ -88,11 +88,12 @@ class Category extends BaseController
             $table->updateRow(function ($db, $no) {
                 $btn_edit = "<button type='button' class='btn btn-sm btn-warning' onclick=\"modalForm('Update Category - " . $db->categoryname . "', 'modal-lg', '" . getURL('category/form/' . encrypting($db->id)) . "', {identifier: this})\"><i class='bx bx-edit-alt'></i></button>";
                 $btn_hapus = "<button type='button' class='btn btn-sm btn-danger' onclick=\"modalDelete('Delete Category - " . $db->categoryname . "', {'link':'" . getURL('category/delete') . "', 'id':'" . encrypting($db->id) . "', 'pagetype':'table'})\"><i class='bx bx-trash'></i></button>";
+                $img = !empty($db->filepath) ? "<img src='" . base_url($db->filepath) . "' alt='Category Image' style='width:60px;height:auto;border-radius:4px;'>" : "<span class='text-muted'>No Image</span>";
                 return [
                     $no,
                     $db->categoryname,
                     $db->description,
-                    $db->filepath,
+                    $img,
                     "<div style='display:flex;align-items:center;justify-content:center;'>$btn_edit&nbsp;$btn_hapus</div>"
                 ];
             });

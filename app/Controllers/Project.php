@@ -10,6 +10,8 @@ use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Fpdf\Fpdf;
 use Exception;
+use PhpOffice\PhpSpreadsheet\Style\Border;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
 
 class Project extends BaseController
 {
@@ -253,111 +255,200 @@ class Project extends BaseController
         echo json_encode($res);
     }
 
-    public function exportexcel()
-    {
-        // Query all projects from the database
-        $projects = $this->projectModel->findAll();
-
-        // Create a new Spreadsheet object
-        $spreadsheet = new Spreadsheet();
-        $sheet = $spreadsheet->getActiveSheet();
-
-        // Set the header row
-        $sheet->setCellValue('A1', 'No')
-            ->setCellValue('B1', 'Project Name')
-            ->setCellValue('C1', 'Description')
-            ->setCellValue('D1', 'Start Date')
-            ->setCellValue('E1', 'End Date')
-            ->setCellValue('F1', 'File Path');
-
-        // Fill in the data
-        $row = 2; // Starting row for project data
-        foreach ($projects as $index => $project) {
-            $sheet->setCellValue('A' . $row, $index + 1)
-                ->setCellValue('B' . $row, $project['projectname'])
-                ->setCellValue('C' . $row, $project['description'])
-                ->setCellValue('D' . $row, $project['startdate'])
-                ->setCellValue('E' . $row, $project['enddate'])
-                ->setCellValue('F' . $row, $project['filepath']);
-            $row++;
-        }
-
-        // Create writer and output the file
-        $writer = new Xlsx($spreadsheet);
-
-        // Set the file name for the download
-        $fileName = 'projects.xlsx';
-
-        // Send the appropriate headers to download the file
-        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-        header('Content-Disposition: attachment;filename="' . $fileName . '"');
-        header('Cache-Control: max-age=0');
-
-        // Write to output
-        $writer->save('php://output');
-    }
-
-    public function generatePdf()
+public function exportexcel()
 {
-    // Include FPDF library
-    $pdf = new Fpdf();
+    if (ob_get_length()) ob_end_clean();
 
-    // Add a page
-    $pdf->AddPage();
+    // ambil data project dari model
+    $data = $this->projectModel->findAll();
+    $spreadsheet = new Spreadsheet();
+    $sheet = $spreadsheet->getActiveSheet();
 
-    // Set font for the title
-    $pdf->SetFont('Arial', 'B', 16);
+    // styling header
+    $headerStyle = [
+        'font' => [
+            'bold' => true,
+            'color' => ['argb' => 'FFFFFF'],
+        ],
+        'fill' => [
+            'fillType' => Fill::FILL_SOLID,
+            'startColor' => ['argb' => '4CAF50'],
+        ],
+        'borders' => [
+            'allBorders' => [
+                'borderStyle' => Border::BORDER_THIN,
+            ],
+        ],
+    ];
 
-    // Add a title
-    $pdf->Cell(200, 10, 'Project Data', 0, 1, 'C');
+    // styling data
+    $dataStyle = [
+        'borders' => [
+            'allBorders' => [
+                'borderStyle' => Border::BORDER_THIN,
+            ],
+        ],
+    ];
 
-    // Set font for body
-    $pdf->SetFont('Arial', '', 12);
+    // header kolom
+    $headers = ['Project Name', 'Description', 'Start Date', 'End Date', 'File Path'];
+    $columns = range('A', 'E');
 
-    // Create a table header
-    $pdf->SetFont('Arial', 'B', 12);
-    $pdf->Cell(40, 10, 'Project Name', 1, 0, 'C');
-    $pdf->Cell(80, 10, 'Description', 1, 0, 'C');
-    $pdf->Cell(35, 10, 'Start Date', 1, 0, 'C');
-    $pdf->Cell(35, 10, 'End Date', 1, 1, 'C');
-
-    // Retrieve project data from the model
-    $projects = $this->projectModel->findAll();
-
-    $pdf->SetFont('Arial', '', 12);
-
-    foreach ($projects as $project) {
-        // Calculate the height for the description field
-        $startX = $pdf->GetX();
-        $startY = $pdf->GetY();
-        $cellWidth = 80; // Width of the description column
-        $lineHeight = 6; // Height of each line in MultiCell
-
-        // Save the current position and create a MultiCell for description
-        $pdf->SetXY($startX + 40, $startY); // Move to the description column
-        $pdf->MultiCell($cellWidth, $lineHeight, $project['description'], 1, 'L');
-
-        // Get the height of the MultiCell
-        $descriptionHeight = $pdf->GetY() - $startY;
-
-        // Calculate the max height of the row
-        $rowHeight = max($descriptionHeight, 10); // Ensure at least the default cell height
-
-        // Reset cursor to draw the Project Name cell
-        $pdf->SetXY($startX, $startY);
-        $pdf->Cell(40, $rowHeight, $project['projectname'], 1, 0, 'C');
-
-        // Move cursor to Start Date column
-        $pdf->SetXY($startX + 120, $startY);
-        $pdf->Cell(35, $rowHeight, $project['startdate'], 1, 0, 'C');
-
-        // Move cursor to End Date column
-        $pdf->SetXY($startX + 155, $startY);
-        $pdf->Cell(35, $rowHeight, $project['enddate'], 1, 1, 'C');
+    foreach ($columns as $key => $column) {
+        $sheet->setCellValue($column . '1', $headers[$key]);
     }
 
-    // Output the PDF to the browser for download
-    $pdf->Output('D', 'projects.pdf');
+    // apply style header
+    $sheet->getStyle('A1:E1')->applyFromArray($headerStyle);
+
+    // isi data
+    $i = 2;
+    foreach ($data as $row) {
+        $sheet->setCellValue('A' . $i, $row['projectname'] ?? '');
+        $sheet->setCellValue('B' . $i, $row['description'] ?? '');
+        $sheet->setCellValue('C' . $i, $row['startdate'] ?? '');
+        $sheet->setCellValue('D' . $i, $row['enddate'] ?? '');
+        $sheet->setCellValue('E' . $i, $row['filepath'] ?? '');
+        $i++;
+    }
+
+    // apply style data
+    $sheet->getStyle('A2:E' . ($i - 1))->applyFromArray($dataStyle);
+
+    // auto-size kolom
+    foreach ($columns as $column) {
+        $sheet->getColumnDimension($column)->setAutoSize(true);
+    }
+
+    // output file
+    $writer = new Xlsx($spreadsheet);
+    $filename = 'Project_' . date('dmy') . '.xlsx';
+    header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    header('Content-Disposition: attachment;filename="' . $filename . '"');
+    header('Cache-Control: max-age=0');
+    $writer->save('php://output');
+    exit;
 }
 
+
+    public function generatePdf()
+    {
+        // Include FPDF library
+        $pdf = new Fpdf();
+
+        // Add a page
+        $pdf->AddPage();
+
+        // Set font for the title
+        $pdf->SetFont('Arial', 'B', 16);
+
+        // Add a title
+        $pdf->Cell(200, 10, 'Project Data', 0, 1, 'C');
+
+        // Set font for body
+        $pdf->SetFont('Arial', '', 12);
+
+        // Create a table header
+        $pdf->SetFont('Arial', 'B', 12);
+        $pdf->Cell(40, 10, 'Project Name', 1, 0, 'C');
+        $pdf->Cell(80, 10, 'Description', 1, 0, 'C');
+        $pdf->Cell(35, 10, 'Start Date', 1, 0, 'C');
+        $pdf->Cell(35, 10, 'End Date', 1, 1, 'C');
+
+        // Retrieve project data from the model
+        $projects = $this->projectModel->findAll();
+
+        $pdf->SetFont('Arial', '', 12);
+
+        foreach ($projects as $project) {
+            // Calculate the height for the description field
+            $startX = $pdf->GetX();
+            $startY = $pdf->GetY();
+            $cellWidth = 80; // Width of the description column
+            $lineHeight = 6; // Height of each line in MultiCell
+
+            // Save the current position and create a MultiCell for description
+            $pdf->SetXY($startX + 40, $startY); // Move to the description column
+            $pdf->MultiCell($cellWidth, $lineHeight, $project['description'], 1, 'L');
+
+            // Get the height of the MultiCell
+            $descriptionHeight = $pdf->GetY() - $startY;
+
+            // Calculate the max height of the row
+            $rowHeight = max($descriptionHeight, 10); // Ensure at least the default cell height
+
+            // Reset cursor to draw the Project Name cell
+            $pdf->SetXY($startX, $startY);
+            $pdf->Cell(40, $rowHeight, $project['projectname'], 1, 0, 'C');
+
+            // Move cursor to Start Date column
+            $pdf->SetXY($startX + 120, $startY);
+            $pdf->Cell(35, $rowHeight, $project['startdate'], 1, 0, 'C');
+
+            // Move cursor to End Date column
+            $pdf->SetXY($startX + 155, $startY);
+            $pdf->Cell(35, $rowHeight, $project['enddate'], 1, 1, 'C');
+        }
+
+        // Output the PDF to the browser for download
+        $pdf->Output('D', 'projects.pdf');
+    }
+
+    public function formImport()
+    {
+        $dt['view'] = view('master/project/v_import', []);
+        $dt['csrfToken'] = csrf_hash();
+        echo json_encode($dt);
+    }
+
+    function importExcel()
+    {
+        //untuk menangkap data yang dikirim dari front end
+        $datas = json_decode($this->request->getPost('datas'));
+        $res = array();
+        $this->db->transBegin();
+        try {
+            $undfhproject = 0;
+            $undfhprojectarr = [];
+
+            foreach ($datas as $dt) {
+
+                // validasi minimal kolom
+                if (empty($dt[0]) || empty($dt[1]) || empty($dt[2]) || empty($dt[3])) { 
+                    $undfhproject++; $undfhprojectarr[] = $dt[0] ?? '-'; 
+                    continue; 
+                }
+
+                // Simpan product
+                $this->projectModel->insert([ 
+                    'projectname' => trim($dt[0]),
+                    'description' => trim($dt[1]), 
+                    'startdate' => trim($dt[2]), 
+                    'enddate' => trim($dt[3]), 
+                    'filepath' => isset($dt[4]) ? trim($dt[4]) : null, 
+                    'createddate' => date('Y-m-d H:i:s'), 
+                    'createdby' => getSession('userid'), 
+                    'updateddate' => date('Y-m-d H:i:s'), 
+                    'updatedby' => getSession('userid'), 
+                ]);
+            }
+
+            $res = [
+                'sukses' => '1',
+                'undfhproject' => $undfhproject,
+                'undfhprojectarr' => $undfhprojectarr
+            ];
+            $this->db->transCommit();
+        } catch (Exception $e) {
+            $res = [
+                'sukses' => '0',
+                'err' => $e->getMessage(),
+                'traceString' => $e->getTraceAsString()
+            ];
+            $this->db->transRollback();
+        }
+        $this->db->transComplete();
+        $res['csrfToken'] = csrf_hash();
+        echo json_encode($res);
+    }
 }

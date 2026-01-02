@@ -348,7 +348,7 @@ class Product extends BaseController
 
             $i++;
         }
-
+        
         $pdf->Output('D', 'Product_Data.pdf');
         exit;
     }
@@ -359,7 +359,6 @@ class Product extends BaseController
         $dt['csrfToken'] = csrf_hash();
         echo json_encode($dt);
     }
-
 
     function importExcel()
     {
@@ -388,7 +387,7 @@ class Product extends BaseController
 
                 // Simpan product
                 $this->productModel->insert([
-                    'productname' => trim($dt[0]),
+                    'productname' => trim($dt[0]),  
                     'category'    => trim($dt[1]),
                     'price'       => (float) $dt[2],
                     'stock'       => (int) $dt[3],

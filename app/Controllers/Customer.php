@@ -413,4 +413,64 @@ class Customer extends BaseController
         $this->db->transComplete();
         echo json_encode($res);
     }
+
+    public function formImport()
+    {
+        $dt['view'] = view('master/customer/v_import', []);
+        $dt['csrfToken'] = csrf_hash();
+        echo json_encode($dt);
+    }
+
+    function importExcel()
+    {
+        //untuk menangkap data yang dikirim dari front end
+        $datas = json_decode($this->request->getPost('datas'));
+        $res = array();
+        $this->db->transBegin();
+        try {
+            $undfhcustomer = 0;
+            $undfhcustomerarr = [];
+
+            foreach ($datas as $dt) {
+
+                // validasi minimal kolom
+                if (empty($dt[0]) || empty($dt[1]) || empty($dt[2]) || empty($dt[3])) {
+                    $undfhcustomer++;
+                    $undfhcustomerarr[] = $dt[0] ?? '-';
+                    continue;
+                }
+
+                // Simpan product
+                $this->customerModel->insert([
+                    'filepath'     => trim($dt[0]), // Foto Customer
+                    'customername' => trim($dt[1]), // Nama
+                    'address'      => trim($dt[2]), // Alamat
+                    'phone'        => trim($dt[3]), // Telepon
+                    'email'        => trim($dt[4]), // Email
+                    'createddate'  => date('Y-m-d H:i:s'),
+                    'createdby'    => getSession('userid'),
+                    'updateddate'  => date('Y-m-d H:i:s'),
+                    'updatedby'    => getSession('userid'),
+                ]);
+            }
+
+            $res = [
+                'sukses' => '1',
+                'undfhcustomer' => $undfhcustomer,
+                'undfhcustomerarr' => $undfhcustomerarr
+            ];
+            $this->db->transCommit();
+        } catch (Exception $e) {
+            $res = [
+                'sukses' => '0',
+                'err' => $e->getMessage(),
+                'traceString' => $e->getTraceAsString()
+            ];
+            $this->db->transRollback();
+        }
+        $this->db->transComplete();
+        $res['csrfToken'] = csrf_hash();
+        echo json_encode($res);
+    }
 }
+
