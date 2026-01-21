@@ -46,15 +46,15 @@ class MSalesOrderDetail extends Model
         return $builder;
     }
 
-    public function getByHeader($headerid)
+    public function getAllByHeader($headerid)
     {
-        return $this->select('trsalesorderdt.*, msproduct.productname, msuom.uomnm')
-                    ->join('msproduct', 'msproduct.id = trsalesorderdt.productid', 'left')
-                    ->join('msuom', 'msuom.id = trsalesorderdt.uomid', 'left')
-                    ->where('trsalesorderdt.headerid', $headerid)
-                    ->findAll();
+        return $this->builder->where('headerid', $headerid)->get()->getResultArray();
     }
 
+    public function getDetailsByHeader($headerid)
+    {
+        return $this->where('headerid', $headerid)->findAll();
+    }
 
     public function getOne($id)
     {

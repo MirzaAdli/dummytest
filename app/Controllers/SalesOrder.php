@@ -180,7 +180,7 @@ class SalesOrder extends BaseController
             $row = $this->salesModel->find($id) ?? $row;
 
             // ambil detail kalau edit
-            $details = $this->salesDetailModel->getByHeader($id);
+            $details = $this->salesDetailModel->getAllByHeader($id);
         }
 
         // data master
@@ -219,12 +219,12 @@ class SalesOrder extends BaseController
             if (empty($transdate))   throw new \Exception("Transdate dibutuhkan!");
             if (empty($customerid))  throw new \Exception("Customername dibutuhkan!");
 
-            // Cek duplikat transcode
-            $row = $this->salesModel->where('transcode', $transcode)->first();
-            if (!empty($row)) throw new \Exception("Transcode sudah terdaftar!");
+            if ($this->salesModel->isDuplicateTranscode($transcode)) {
+                throw new \Exception("Transcode sudah terdaftar!");
+            }
 
-            // Insert ke header
-            $this->salesModel->store([
+
+            $data = [
                 'transcode'   => $transcode,
                 'transdate'   => $transdate,
                 'customerid'  => $customerid,
@@ -235,7 +235,11 @@ class SalesOrder extends BaseController
                 'updateddate' => date('Y-m-d H:i:s'),
                 'updatedby'   => session()->get('id'),
                 'isactive'    => true
-            ]);
+            ];
+
+
+            // Insert ke header
+            $this->salesModel->store($data);
             $headerid = $this->db->insertID();
             $res = [
                 'sukses' => 1,
@@ -303,7 +307,6 @@ class SalesOrder extends BaseController
             ];
             $this->db->transRollback();
         }
-        $this->db->transComplete();
         echo json_encode($res);
     }
 
@@ -321,8 +324,10 @@ class SalesOrder extends BaseController
             if (empty($transcode)) throw new Exception("Transcode dibutuhkan!");
             if (empty($transdate)) throw new Exception("Transdate dibutuhkan!");
             if (empty($customerid)) throw new Exception("Customername dibutuhkan!");
-            $row = $this->salesModel->where('transcode', $transcode)->first();
-            if (!empty($row) && $row['id'] != $id) throw new Exception("Transcode sudah terdaftar!");
+            if ($this->salesModel->isDuplicateTranscode($transcode, $id)) {
+                throw new \Exception("Transcode sudah terdaftar!");
+            }
+
             $data = [
                 'transcode' => $transcode,
                 'transdate' => $transdate,
@@ -345,7 +350,7 @@ class SalesOrder extends BaseController
             ];
             $this->db->transRollback();
         }
-        $this->db->transComplete();
+
         echo json_encode($res);
     }
 
@@ -414,7 +419,6 @@ class SalesOrder extends BaseController
             ];
             $this->db->transRollback();
         }
-        $this->db->transComplete();
         echo json_encode($res);
     }
 
@@ -447,23 +451,22 @@ class SalesOrder extends BaseController
             ];
             $this->db->transRollback();
         }
-        $this->db->transComplete();
         echo json_encode($res);
     }
 
     public function updateGrandTotal($headerid)
     {
-        $details = $this->salesDetailModel->where('headerid', $headerid)->findAll();
+        // Ambil detail dari model
+        $details = $this->salesDetailModel->getDetailsByHeader($headerid);
+
+        // Hitung grand total
         $grandtotal = 0;
         foreach ($details as $dt) {
             $grandtotal += $dt['qty'] * $dt['price'];
         }
 
-        $this->salesModel->update($headerid, [
-            'grandtotal'  => $grandtotal,
-            'updateddate' => date('Y-m-d H:i:s'),
-            'updatedby'   => session()->get('id'),
-        ]);
+        // Update ke header lewat model
+        $this->salesModel->updateGrandTotal($headerid, $grandtotal);
 
         return $grandtotal;
     }

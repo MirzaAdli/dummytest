@@ -74,4 +74,23 @@ class MSalesOrder extends Model
     {
         return $this->builder->delete([$column => $value]);
     }
+
+    public function isDuplicateTranscode($transcode, $excludeId = null)
+    {
+        $row = $this->where('transcode', $transcode)->first();
+        if (!$row) {
+            return false;
+        }
+        // kalau excludeId diset, pastikan bukan record yang sedang diupdate
+        return $row['id'] != $excludeId;
+    }
+
+    public function updateGrandTotal($headerid, $grandtotal)
+    {
+        return $this->update($headerid, [
+            'grandtotal'  => $grandtotal,
+            'updateddate' => date('Y-m-d H:i:s'),
+            'updatedby'   => session()->get('id'),
+        ]);
+    }
 }
