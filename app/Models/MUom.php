@@ -43,7 +43,7 @@ class MUom extends Model
 
     public function searchUom($search, $limit = 10)
     {
-        $builder = $this->like('uomnm', $search);
-        return $builder->findAll($limit);
+        return $this->like('uomnm', $search, 'both', null, true)
+            ->findAll($limit);
     }
 }

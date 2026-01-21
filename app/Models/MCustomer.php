@@ -68,7 +68,7 @@ class MCustomer extends Model
 
     public function searchCustomer($search, $limit = 10)
     {
-        return $this->like('customername', $search)
+        return $this->like('customername', $search, 'both', null, true)
             ->findAll($limit);
     }
 }

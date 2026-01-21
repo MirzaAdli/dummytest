@@ -52,7 +52,7 @@
     </div>
 
     <div class="modal-footer">
-      
+
       <button type="submit" id="btn-submit" class="btn btn-primary btn-sm d-flex align-items-center">
         <i class="bx bx-check me-1"></i> <?= ($form_type == 'edit' ? 'Update' : 'Save') ?>
       </button>
@@ -180,6 +180,8 @@
         "<?= base_url('salesorder/updateDetail') ?>" :
         "<?= base_url('salesorder/addDetail') ?>";
 
+      $('#btn-detail').prop('disabled', true);
+
       $.ajax({
         type: 'POST',
         url: url,
@@ -201,7 +203,7 @@
 
             // update grandtotal di form
             $('#grandtotal').text(res.grandtotal);
-            
+
             // reload detail table
             $('#detailTable').DataTable().ajax.reload(null, false);
 
@@ -213,7 +215,12 @@
             // update CSRF
             $("#csrf_token").val(encrypter(res.csrfToken));
           }
+        },
+        complete: function() {
+          // aktifkan kembali tombol setelah selesai
+          $('#btn-detail').prop('disabled', false);
         }
+
       });
     });
 

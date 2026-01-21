@@ -77,7 +77,7 @@ class MProduct extends Model
 
     public function searchProduct($search, $limit = 10)
     {
-        return $this->like('productname', $search)
+        return $this->like('productname', $search, 'both', null, true)
             ->findAll($limit);
     }
 }
