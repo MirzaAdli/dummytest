@@ -1,5 +1,7 @@
 <?php
+
 namespace App\Models;
+
 use CodeIgniter\Model;
 
 class MUom extends Model
@@ -37,5 +39,11 @@ class MUom extends Model
     public function destroy($column, $value)
     {
         return $this->builder->delete([$column => $value]);
+    }
+
+    public function searchUom($search, $limit = 10)
+    {
+        $builder = $this->like('uomnm', $search);
+        return $builder->findAll($limit);
     }
 }

@@ -11,8 +11,15 @@ class MCustomer extends Model
     protected $primaryKey = 'id';
     protected $returnType = 'array';
     protected $allowedFields = [
-        'customername', 'address', 'phone', 'email', 'filepath',
-        'createddate', 'createdby', 'updateddate', 'updatedby'
+        'customername',
+        'address',
+        'phone',
+        'email',
+        'filepath',
+        'createddate',
+        'createdby',
+        'updateddate',
+        'updatedby'
     ];
 
     public function searchable()
@@ -58,5 +65,10 @@ class MCustomer extends Model
     {
         return $this->where($column, $value)->delete();
     }
-    
+
+    public function searchCustomer($search, $limit = 10)
+    {
+        return $this->like('customername', $search)
+            ->findAll($limit);
+    }
 }

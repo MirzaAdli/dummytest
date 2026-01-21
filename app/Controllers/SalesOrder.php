@@ -51,11 +51,10 @@ class SalesOrder extends BaseController
     public function customerList()
     {
         $search = $this->request->getPost('search');
-        $builder = $this->customerModel;
-        if (!empty($search)) {
-            $builder = $builder->like('customername', $search);
-        }
-        $items = $builder->findAll(10);
+
+        $items = !empty($search)
+            ? $this->customerModel->searchCustomer($search)
+            : $this->customerModel->findAll(10);
 
         $results = array_map(fn($c) => [
             'id'   => $c['id'],
@@ -68,11 +67,10 @@ class SalesOrder extends BaseController
     public function productList()
     {
         $search = $this->request->getPost('search');
-        $builder = $this->productModel;
-        if (!empty($search)) {
-            $builder = $builder->like('productname', $search);
-        }
-        $items = $builder->findAll(10);
+
+        $items = !empty($search)
+            ? $this->productModel->searchProduct($search)
+            : $this->productModel->findAll(10);
 
         $results = array_map(fn($p) => [
             'id'    => $p['id'],
@@ -86,11 +84,9 @@ class SalesOrder extends BaseController
     public function uomList()
     {
         $search = $this->request->getPost('search');
-        $builder = $this->uomModel;
-        if (!empty($search)) {
-            $builder = $builder->like('uomnm', $search);
-        }
-        $items = $builder->findAll(10);
+        $items  = !empty($search)
+            ? $this->uomModel->searchUom($search)
+            : $this->uomModel->findAll(10);
 
         $results = array_map(fn($u) => [
             'id'   => $u['id'],
@@ -223,7 +219,6 @@ class SalesOrder extends BaseController
                 throw new \Exception("Transcode sudah terdaftar!");
             }
 
-
             $data = [
                 'transcode'   => $transcode,
                 'transdate'   => $transdate,
@@ -237,16 +232,24 @@ class SalesOrder extends BaseController
                 'isactive'    => true
             ];
 
-
             // Insert ke header
             $this->salesModel->store($data);
             $headerid = $this->db->insertID();
-            $res = [
-                'sukses' => 1,
-                'pesan'  => 'Sukses menambahkan Sales Order baru',
-                'dbError' => $this->db->error()
-            ];
-            $this->db->transCommit();
+            if ($this->db->transStatus() === FALSE) {
+                $this->db->transRollback();
+                $res = [
+                    'sukses' => 0,
+                    'pesan'  => 'Terjadi kesalahan',
+                    'dbError' => $this->db->error()
+                ];
+            } else {
+                $this->db->transCommit();
+                $res = [
+                    'sukses' => 1,
+                    'pesan'  => 'Sukses menambahkan Sales Order baruu',
+                    'dbError' => $this->db->error()
+                ];
+            }
         } catch (\Exception $e) {
             $res = [
                 'sukses' => 0,
@@ -254,7 +257,6 @@ class SalesOrder extends BaseController
                 'traceString' => $e->getTraceAsString(),
                 'dbError' => $this->db->error()
             ];
-            $this->db->transRollback();
         }
 
         echo json_encode($res);
@@ -276,7 +278,7 @@ class SalesOrder extends BaseController
             $total = $qty * $price;
 
             // Insert ke detail
-            $this->salesDetailModel->store([
+            $data = [
                 'headerid' => $headerid,
                 'productid' => $productId,
                 'uomid' => $uomId,
@@ -287,17 +289,27 @@ class SalesOrder extends BaseController
                 'updateddate' => date('Y-m-d H:i:s'),
                 'updatedby' => session()->get('id'),
                 'isactive' => true
-            ]);
+            ];
+            $this->salesDetailModel->store($data);
 
             $grandtotal = $this->updateGrandTotal($headerid);
 
-            $res = [
-                'sukses' => '1',
-                'pesan' => 'Sukses menambahkan Detail',
-                'grandtotal' => $grandtotal,
-                'dbError' => db_connect()
-            ];
-            $this->db->transCommit();
+            if ($this->db->transStatus() === FALSE) {
+                $this->db->transRollback();
+                $res = [
+                    'sukses' => '0',
+                    'pesan'  => 'Terjadi kesalahan saat insert detaill',
+                    'dbError' => $this->db->error()
+                ];
+            } else {
+                $this->db->transCommit();
+                $res = [
+                    'sukses'     => '1',
+                    'pesan'      => 'Sukses menambahkan Detaill',
+                    'grandtotal' => $grandtotal,
+                    'dbError'    => $this->db->error()
+                ];
+            }
         } catch (\Exception $e) {
             $res = [
                 'sukses' => '0',
@@ -305,7 +317,6 @@ class SalesOrder extends BaseController
                 'traceString' => $e->getTraceAsString(),
                 'dbError' => db_connect()
             ];
-            $this->db->transRollback();
         }
         echo json_encode($res);
     }
@@ -335,12 +346,21 @@ class SalesOrder extends BaseController
                 'description' => $description,
             ];
             $this->salesModel->edit($id, $data);
-            $res = [
-                'sukses' => '1',
-                'pesan' => 'Sukses update Sales Order',
-                'dbError' => $this->db->error()
-            ];
-            $this->db->transCommit();
+            if ($this->db->transStatus() === FALSE) {
+                $this->db->transRollback();
+                $res = [
+                    'sukses' => '0',
+                    'pesan'  => 'Terjadi kesalahan saat update Sales Order',
+                    'dbError' => $this->db->error()
+                ];
+            } else {
+                $this->db->transCommit();
+                $res = [
+                    'sukses' => '1',
+                    'pesan'  => 'Sukses update Sales Order',
+                    'dbError' => $this->db->error()
+                ];
+            }
         } catch (Exception $e) {
             $res = [
                 'sukses' => '0',
@@ -348,7 +368,6 @@ class SalesOrder extends BaseController
                 'traceString' => $e->getTraceAsString(),
                 'dbError' => $this->db->error()
             ];
-            $this->db->transRollback();
         }
 
         echo json_encode($res);
@@ -377,13 +396,22 @@ class SalesOrder extends BaseController
             // hitung ulang grandtotal di header
             $grandtotal = $this->updateGrandTotal($headerid);
 
-            $res = [
-                'sukses'     => 1,
-                'pesan'      => 'Detail berhasil diupdate',
-                'grandtotal' => $grandtotal,
-                'dbError'    => $this->db->error()
-            ];
-            $this->db->transCommit();
+            if ($this->db->transStatus() === FALSE) {
+                $this->db->transRollback();
+                $res = [
+                    'sukses'  => 0,
+                    'pesan'   => 'Terjadi kesalahan saat update detail',
+                    'dbError' => $this->db->error()
+                ];
+            } else {
+                $this->db->transCommit();
+                $res = [
+                    'sukses'     => 1,
+                    'pesan'      => 'Detail berhasil diupdate',
+                    'grandtotal' => $grandtotal,
+                    'dbError'    => $this->db->error()
+                ];
+            }
         } catch (\Exception $e) {
             $res = [
                 'sukses'      => 0,
@@ -391,7 +419,6 @@ class SalesOrder extends BaseController
                 'traceString' => $e->getTraceAsString(),
                 'dbError'     => $this->db->error()
             ];
-            $this->db->transRollback();
         }
         echo json_encode($res);
     }
@@ -404,12 +431,21 @@ class SalesOrder extends BaseController
         $this->db->transBegin();
         try {
             $this->salesModel->destroy('id', $id);
-            $res = [
-                'sukses' => '1',
-                'pesan' => 'Data berhasil dihapus',
-                'dbError' => $this->db->error()
-            ];
-            $this->db->transCommit();
+            if ($this->db->transStatus() === FALSE) {
+                $this->db->transRollback();
+                $res = [
+                    'sukses'  => 0,
+                    'pesan'   => 'Terjadi kesalahan saat menghapus data',
+                    'dbError' => $this->db->error()
+                ];
+            } else {
+                $this->db->transCommit();
+                $res = [
+                    'sukses' => 1,
+                    'pesan'  => 'Data berhasil dihapus',
+                    'dbError' => $this->db->error()
+                ];
+            }
         } catch (Exception $e) {
             $res = [
                 'sukses' => '0',
@@ -417,7 +453,6 @@ class SalesOrder extends BaseController
                 'traceString' => $e->getTraceAsString(),
                 'dbError' => $this->db->error()
             ];
-            $this->db->transRollback();
         }
         echo json_encode($res);
     }
@@ -435,13 +470,22 @@ class SalesOrder extends BaseController
             $this->salesDetailModel->destroy('id', $id);
             $grandtotal = $this->updateGrandTotal($headerid);
 
-            $res = [
-                'sukses'    => '1',
-                'pesan'     => 'Detail berhasil dihapus',
-                'grandtotal' => $grandtotal,
-                'dbError'   => $this->db->error()
-            ];
-            $this->db->transCommit();
+            if ($this->db->transStatus() === FALSE) {
+                $this->db->transRollback();
+                $res = [
+                    'sukses'  => 0,
+                    'pesan'   => 'Terjadi kesalahan saat menghapus detail',
+                    'dbError' => $this->db->error()
+                ];
+            } else {
+                $this->db->transCommit();
+                $res = [
+                    'sukses'     => 1,
+                    'pesan'      => 'Detail berhasil dihapus',
+                    'grandtotal' => $grandtotal,
+                    'dbError'    => $this->db->error()
+                ];
+            }
         } catch (Exception $e) {
             $res = [
                 'sukses'      => '0',
@@ -449,7 +493,6 @@ class SalesOrder extends BaseController
                 'traceString' => $e->getTraceAsString(),
                 'dbError'     => $this->db->error()
             ];
-            $this->db->transRollback();
         }
         echo json_encode($res);
     }

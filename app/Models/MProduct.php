@@ -1,5 +1,7 @@
 <?php
+
 namespace App\Models;
+
 use CodeIgniter\Model;
 
 class MProduct extends Model
@@ -71,5 +73,11 @@ class MProduct extends Model
     public function getOneBy($column, $value)
     {
         return $this->where($column, $value)->first();
+    }
+
+    public function searchProduct($search, $limit = 10)
+    {
+        return $this->like('productname', $search)
+            ->findAll($limit);
     }
 }
