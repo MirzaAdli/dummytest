@@ -76,6 +76,12 @@
                     <span class='fw-normal fs-7'>Customer</span>
                 </div>
             </a>
+            <a href='<?= getURL('salesorder') ?>' class='no-parent'>
+                <div class='sidebar-item'>
+                    <i class='bx bxs-cart'></i>
+                    <span class='fw-normal fs-7'>Sales Order</span>
+                </div>
+            </a>
         </div>
         <button class=" btn btn-primary dflex align-center w-100 btn-logout" onclick="return toPage('<?= getURL('logout') ?>')" style="display: none;">
             <i class="bx bx-log-out margin-r-3"></i>

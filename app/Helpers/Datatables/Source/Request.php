@@ -39,16 +39,18 @@ class Request
      * */
     public function search()
     {
-        return SearchValue::fromArray($this->request->getVar('search'));
+    $searchData = $this->request->getVar('search');
+    return SearchValue::fromArray($searchData ?: []); 
     }
 
-    /**
+   /**
      * @return Column[]
      * */
     public function columns()
     {
         $columns = array();
-        foreach($this->request->getVar('columns') as $column)
+        $columnData = $this->request->getVar('columns') ?: [];  // Default ke array kosong jika null
+        foreach($columnData as $column)
         {
             $columns[] = Column::fromArray($column);
         }
@@ -57,18 +59,20 @@ class Request
     }
 
     /**
-     * @retur Order[]
+     * @return Order[]
      * */
     public function orders()
     {
         $orders = array();
-        foreach($this->request->getVar('order') as $order)
+        $orderData = $this->request->getVar('order') ?: [];  // Default ke array kosong jika null
+        foreach($orderData as $order)
         {
             $orders[] = Order::fromArray($order);
         }
 
         return $orders;
     }
+
 
     public function setDatabaseColumns(array $columns)
     {

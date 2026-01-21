@@ -1,14 +1,12 @@
 <?php
-
 namespace App\Models;
-
 use CodeIgniter\Model;
 
 class MProduct extends Model
 {
-    protected $dbs;
     protected $table = 'msproduct';
     protected $primaryKey = 'id';
+    protected $returnType = 'array';
     protected $allowedFields = [
         'productname',
         'category',
@@ -20,18 +18,6 @@ class MProduct extends Model
         'updateddate',
         'updatedby'
     ];
-
-    public function __construct()
-    {
-        parent::__construct();
-        $this->dbs = db_connect();
-        $this->builder = $this->dbs->table($this->table);
-    }
-
-    public function store($data)
-    {
-        return $this->builder->insert($data);
-    }
 
     public function searchable()
     {
@@ -49,35 +35,41 @@ class MProduct extends Model
 
     public function datatable()
     {
-        return $this->builder;
+        return $this->builder();
+    }
+
+    public function getAll()
+    {
+        return $this->findAll();
     }
 
     public function getOne($id)
     {
-        return $this->builder->where('id', $id)->get()->getRowArray();
+        return $this->find($id);
     }
 
-    public function edit($data, $id)
+    public function store($data)
     {
-        return $this->builder->update($data, ['id' => $id]);
+        return $this->insert($data);
+    }
+
+    public function edit($id, $data)
+    {
+        return $this->update($id, $data);
     }
 
     public function destroy($column, $value)
     {
-        return $this->builder->delete([$column => $value]);
+        return $this->where($column, $value)->delete();
     }
 
     public function getByName($name)
     {
-        return $this->builder->where("lower(productname)", strtolower($name))->get()->getRowArray();
+        return $this->where('LOWER(productname)', strtolower($name))->first();
     }
 
     public function getOneBy($column, $value)
     {
-        return $this->builder->where($column, $value)->get()->getRowArray();
-    }
-
-    public function getAll(){
-        return $this->builder->get()->getResultArray();
+        return $this->where($column, $value)->first();
     }
 }

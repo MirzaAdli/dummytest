@@ -63,7 +63,7 @@ class DriversMethod extends Drivers
     {
         $queryData = $this->filter(call_user_func_array($this->callable, $this->params));
         if ($this->request->length() > 0)
-            $queryData->limit($this->request->length(), $this->request->start());
+            $queryData->limit((int)$this->request->length(), (int)$this->request->start());
 
         $this->query = $queryData->get();
 

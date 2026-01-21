@@ -4,23 +4,30 @@ namespace App\Models;
 
 use CodeIgniter\Model;
 
-class MUser extends Model
+class MUser extends Model   
 {
     protected $dbs;
-    protected $table = 'msuser as us';
+    protected $table = 'msuser';
+    protected $primaryKey = 'id';
+    protected $allowedFields = [
+    'fullname','username','email','telp','filepath',
+    'createddate','createdby','updateddate','updatedby'
+    ];
+
     public function __construct()
     {
+        parent::__construct(); // panggil constructor Model
         $this->dbs = db_connect();
         $this->builder = $this->dbs->table($this->table);
     }
 
     public function searchable()
-    {
+    {   
         return [
             null,
-            "us.username",
-            "us.fullname",
-            "us.email",
+            "username",
+            "fullname",
+            "email",
             null,
             null,
         ];
@@ -36,9 +43,14 @@ class MUser extends Model
         return $this->builder->where("lower(username)", strtolower($name))->get()->getRowArray();
     }
 
-    public function getOne($userid)
+    public function getOne($id)
     {
-        return $this->builder->where("userid", $userid)->get()->getRowArray();
+        return $this->builder->where("id", $id)->get()->getRowArray();
+    }
+
+    public function getAll()
+    {
+        return $this->builder->get()->getResultArray();
     }
 
     public function store($data)
@@ -48,7 +60,7 @@ class MUser extends Model
 
     public function edit($data, $id)
     {
-        return $this->builder->update($data, ['userid' => $id]);
+        return $this->builder->update($data, ['id' => $id]);
     }
 
     public function destroy($column, $value)

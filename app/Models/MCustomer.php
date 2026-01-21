@@ -7,28 +7,23 @@ use CodeIgniter\Model;
 class MCustomer extends Model
 {
     protected $db;
-    protected $table = 'mscustomer as us';
+    protected $table = 'mscustomer';
     protected $primaryKey = 'id';
+    protected $returnType = 'array';
     protected $allowedFields = [
         'customername', 'address', 'phone', 'email', 'filepath',
         'createddate', 'createdby', 'updateddate', 'updatedby'
     ];
 
-    public function __construct()
-    {
-        $this->db = db_connect();
-        $this->builder = $this->db->table($this->table);
-    }
-
     public function searchable()
     {
         return [
             null,
-            "us.customername",
-            "us.address",
-            "us.phone",
-            "us.email",
-            "us.filepath",
+            "customername",
+            "address",
+            "phone",
+            "email",
+            "filepath",
             null,
             null,
         ];
@@ -36,32 +31,32 @@ class MCustomer extends Model
 
     public function datatable()
     {
-        return $this->builder;
+        return $this->builder();
     }
 
     public function getByName($name)
     {
-        return $this->builder->where("lower(customername)", strtolower($name))->get()->getRowArray();
+        return $this->find($name);
     }
 
     public function getOne($customerid)
     {
-        return $this->builder->where("id", $customerid)->get()->getRowArray();
+        return $this->find($customerid);
     }
 
     public function store($data)
     {
-        return $this->builder->insert($data);
+        return $this->insert($data);
     }
 
     public function edit($data, $id)
     {
-        return $this->builder->update($data, ['id' => $id]);
+        return $this->update($id, $data);
     }
 
     public function destroy($column, $value)
     {
-        return $this->builder->delete([$column => $value]);
+        return $this->where($column, $value)->delete();
     }
     
 }

@@ -28,6 +28,8 @@ $routes->group('user', function ($routes) {
     $routes->add('export', 'User::exportexcel', $this->noauth);
     $routes->add('delete', 'User::deleteData', $this->noauth);
     $routes->add('printpdf', 'User::printPDF', $this->noauth);
+    $routes->add('formImport', 'User::formImport', $this->noauth);
+    $routes->add('importExcel', 'User::importExcel', $this->noauth);
 });
 
 //document ROUTES
@@ -55,6 +57,7 @@ $routes->group('customer', function ($routes) {
     $routes->add('formImport', 'Customer::formImport', $this->noauth);
     $routes->add('importExcel', 'Customer::importExcel', $this->noauth);
 });
+
 // Routes Master Category
 $routes->group('category', function ($routes) {
     $routes->add('', 'Category::index', $this->noauth);
@@ -67,7 +70,6 @@ $routes->group('category', function ($routes) {
     $routes->add('export', 'Category::export', $this->noauth);
     $routes->add('exportPdf', 'Category::exportPdf', $this->noauth);
 });
-
 
 // Routes Master Supplier
 $routes->group('supplier', function ($routes) {
@@ -111,6 +113,28 @@ $routes->group('product', function ($routes) {
     $routes->add('delete', 'Product::deleteData', $this->noauth);
     $routes->add('formImport', 'Product::formImport', $this->noauth);
     $routes->add('importExcel', 'Product::importExcel', $this->noauth);
+});
+// Routes Master Sales Order
+$routes->group('salesorder', function ($routes) {
+    $routes->add('', 'SalesOrder::index', $this->noauth);
+    $routes->add('table', 'SalesOrder::datatable', $this->noauth);
+    $routes->add('add', 'SalesOrder::addData', $this->noauth);
+    $routes->add('form', 'SalesOrder::forms', $this->noauth);
+    $routes->add('form/(:any)', 'SalesOrder::forms/$1', $this->noauth);
+    $routes->add('update', 'SalesOrder::updateData', $this->noauth);
+    $routes->add('delete', 'SalesOrder::deleteData', $this->noauth);
+
+    //sales order detail routes
+    $routes->add('addDetail', 'SalesOrder::addDetail', $this->noauth);
+    $routes->add('updateDetail', 'SalesOrder::updateDetail', $this->noauth);
+    $routes->add('deleteDetail', 'SalesOrder::deleteDetail', $this->noauth);
+    $routes->add('detaildatatable/(:num)', 'SalesOrder::detaildatatable/$1', $this->noauth);
+    $routes->add('getGrandTotal', 'SalesOrder::getGrandTotal', $this->noauth);
+
+    //list for select2
+    $routes->post('customer/list', 'SalesOrder::customerList', $this->noauth);
+    $routes->post('product/list', 'SalesOrder::productList', $this->noauth);
+    $routes->post('uom/list', 'SalesOrder::uomList', $this->noauth);
 });
 // -------------------------------------------------------->
 // Log Out

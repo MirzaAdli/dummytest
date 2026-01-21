@@ -1,0 +1,25 @@
+public function insert(){
+    $db=Database::connect();
+    $model = new CategoryModel();
+
+    $db->transBegin();
+
+    $model=>insert([
+        'name'=>$this->request->getPost('name'),
+        'description'=>$this->request->('description')
+    ]);
+
+    if($db=>transStatus===false){
+        $db->transRollback();
+    }else{
+        $db->transCommit();
+    }
+
+}
+
+class CategoryModel extends Model{
+    protected $table = 'category';
+    protected $primarykey = 'id';
+
+    protected allowedFileds = ['name', 'description'];
+}

@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Controllers;
 
 use App\Controllers\BaseController;
@@ -7,7 +6,20 @@ use App\Helpers\Datatables\Datatables;
 use App\Models\MUser;
 use CodeIgniter\HTTP\ResponseInterface;
 use Exception;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Fpdf\Fpdf;
+use PhpOffice\PhpSpreadsheet\Style\Alignment;
+
+$headerStyle['alignment'] = [
+    'horizontal' => Alignment::HORIZONTAL_CENTER,
+    'vertical' => Alignment::VERTICAL_CENTER,
+];
+
+$dataStyle['alignment'] = [
+    'horizontal' => Alignment::HORIZONTAL_LEFT,
+    'vertical' => Alignment::VERTICAL_CENTER,
+];
+
 
 class User extends BaseController
 {
@@ -53,7 +65,7 @@ class User extends BaseController
             $row = $this->userModel->getByName($username);
             if (empty($row)) throw new Exception("User tidak terdaftar di sistem!");
             if (password_verify($password, $row['password'])) {
-                setSession('userid', $row['userid']);
+                setSession('userid', $row['id']);
                 setSession('name', $row['fullname']);
                 $res = [
                     'sukses' => '1',
@@ -67,7 +79,7 @@ class User extends BaseController
         } catch (Exception $e) {
             $res = [
                 'sukses' => '0',
-                'pesan' => $e->getMessage(),
+                'pesan' => $e->getMessage(),    
                 'traceString' => $e->getTraceAsString(),
                 'dbError' => db_connect()->error()
             ];
@@ -82,8 +94,8 @@ class User extends BaseController
             ->make();
 
         $table->updateRow(function ($db, $no) {
-            $btn_edit = "<button type='button' class='btn btn-sm btn-warning' onclick=\"modalForm('Update User - " . $db->fullname . "', 'modal-lg', '" . getURL('user/form/' . encrypting($db->userid)) . "', {identifier: this})\"><i class='bx bx-edit-alt'></i></button>";
-            $btn_hapus = "<button type='button' class='btn btn-sm btn-danger' onclick=\"modalDelete('Delete User - " . $db->fullname . "', {'link':'" . getURL('user/delete') . "', 'id':'" . encrypting($db->userid) . "', 'pagetype':'table'})\"><i class='bx bx-trash'></i></button>";
+            $btn_edit = "<button type='button' class='btn btn-sm btn-warning' onclick=\"modalForm('Update User - " . $db->fullname . "', 'modal-lg', '" . getURL('user/form/' . encrypting($db->id)) . "', {identifier: this})\"><i class='bx bx-edit-alt'></i></button>";
+            $btn_hapus = "<button type='button' class='btn btn-sm btn-danger' onclick=\"modalDelete('Delete User - " . $db->fullname . "', {'link':'" . getURL('user/delete') . "', 'id':'" . encrypting($db->id) . "', 'pagetype':'table'})\"><i class='bx bx-trash'></i></button>";
             return [
                 $no,
                 $db->fullname,
@@ -207,6 +219,7 @@ class User extends BaseController
         $this->db->transComplete();
         echo json_encode($res);
     }
+    
 
     public function deleteData()
     {
@@ -216,7 +229,7 @@ class User extends BaseController
         try {
             $row = $this->userModel->getOne($userid);
             if (empty($row)) throw new Exception("User tidak terdaftar!");
-            $this->userModel->destroy('userid', $userid);
+            $this->userModel->destroy('id', $userid);
             $res = [
                 'sukses' => '1',
                 'pesan' => 'Data berhasil dihapus!',
@@ -302,26 +315,27 @@ class User extends BaseController
             ],
         ];
         //digunakan untuk menulis header kolom pertama
-        $headers = ['Name', 'Username', 'Email', 'Telephone', 'File Path'];
-        $columns = range('A', 'E');
+        $headers = ['No', 'Name', 'Username', 'Email', 'Telephone', 'File Path'];
+        $columns = range('A', 'F');
 
         foreach ($columns as $key => $column) {
             $sheet->setCellValue($column . '1', $headers[$key]);
         }
         // untuk memasang style dimana ingin ditempatkan
-        $sheet->getStyle('A1:E1')->applyFromArray($headerStyle);
+        $sheet->getStyle('A1:F1')->applyFromArray($headerStyle);
         $i = 2;
         // untuk menulis data yang diambil dari db ke excell
-        foreach ($data as $row) {
-            $sheet->setCellValue('A' . $i, $row['fullname']);
-            $sheet->setCellValue('B' . $i, $row['username']);
-            $sheet->setCellValue('C' . $i, $row['email']);
-            $sheet->setCellValue('D' . $i, $row['telp']);
-            $sheet->setCellValue('E' . $i, $row['filepath']);
+        foreach ($data as $index => $row) {
+            $sheet->setCellValue('A' . $i, $index + 1);
+            $sheet->setCellValue('B' . $i, $row['fullname']);
+            $sheet->setCellValue('C' . $i, $row['username']);
+            $sheet->setCellValue('D' . $i, $row['email']);
+            $sheet->setCellValue('E' . $i, $row['telp']);
+            $sheet->setCellValue('F' . $i, $row['filepath']);
             $i++;
         }
         // untuk memasang style dimana ingin ditempatkan
-        $sheet->getStyle('A2:E' . ($i - 1))->applyFromArray($dataStyle);
+        $sheet->getStyle('A2:F' . ($i - 1))->applyFromArray($dataStyle);
         foreach ($columns as $column) {
             $sheet->getColumnDimension($column)->setAutoSize(true);
         }
@@ -340,4 +354,69 @@ class User extends BaseController
         exit;
     }
 
+    public function formImport()
+    {
+        $dt['view'] = view('master/user/v_import', []);
+        $dt['csrfToken'] = csrf_hash();
+        echo json_encode($dt);
+    }
+
+    public function importExcel()
+    {
+        // data dari front end (JSON)
+        $datas = json_decode($this->request->getPost('datas'));
+        $res = array();
+        $this->db->transBegin();
+
+        try {
+            $undfhuser = 0;
+            $undfhuserarr = [];
+
+            foreach ($datas as $dt) {
+                // validasi minimal kolom (fullname, username, email, telp)
+                if (
+                    empty($dt[0]) || // fullname
+                    empty($dt[1]) || // username
+                    empty($dt[2]) || // email
+                    empty($dt[3])    // telp
+                ) {
+                    $undfhuser++;
+                    $undfhuserarr[] = $dt[0] ?? '-';
+                    continue;
+                }
+
+                // simpan user
+                $this->userModel->insert([
+                    'fullname'    => trim($dt[0]),
+                    'username'    => trim($dt[1]),
+                    'email'       => trim($dt[2]),
+                    'telp'        => trim($dt[3]),
+                    'filepath'    => $dt[4] ?? null, // opsional
+                    'createddate' => date('Y-m-d H:i:s'),
+                    'createdby'   => getSession('id'),
+                    'updateddate' => date('Y-m-d H:i:s'),
+                    'updatedby'   => getSession('id'),
+                ]);
+            }
+
+            $res = [
+                'sukses' => '1',
+                'undfhuser' => $undfhuser,
+                'undfhuserarr' => $undfhuserarr
+            ];
+            $this->db->transCommit();
+        } catch (Exception $e) {
+            $res = [
+                'sukses' => '0',
+                'err' => $e->getMessage(),
+                'traceString' => $e->getTraceAsString()
+            ];
+            $this->db->transRollback();
+        }
+
+        $this->db->transComplete();
+        $res['csrfToken'] = csrf_hash();
+        echo json_encode($res);
+    }
+        
 }

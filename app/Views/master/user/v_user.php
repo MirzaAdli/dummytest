@@ -13,9 +13,13 @@
                 <span class="fw-normal fs-7">Add New</span>
             </button>
 
-            <button class="btn btn-primary dflex align-center margin-l-2" onclick="downloadexcel()">
+            <button class="btn btn-primary dflex align-center margin-l-2" onclick="window.location.href= '<?= getURL('user/export') ?>'">
                 <i class="bx bx-download margin-r-2"></i>
                 <span class="fw-normal fs-7">Export</span>
+            </button>
+            <button class="btn btn-primary dflex align-center margin-l-2" onclick="return modalForm('Import User', 'modal-lg', '<?= getURL('user/formImport') ?>')">
+                <i class="bx bx-download margin-r-2"></i>
+                <span class="fw-normal fs-7">Import</span>
             </button>
         </div>
         <div class="card-body">
