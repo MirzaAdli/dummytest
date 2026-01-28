@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use CodeIgniter\Model;
+use CodeIgniter\HTTP\RequestInterface;
 
 class MSalesOrderDetail extends Model
 {
@@ -24,41 +25,64 @@ class MSalesOrderDetail extends Model
         'isactive'
     ];
 
+    // protected $sales_id;
+
+    // public function setSalesId($sales_id)
+    // {
+    //     echo $this->sales_id;
+    //     die;
+    //     $this->sales_id = $sales_id;
+    //     return $this;
+    // }
+
     public function __construct()
     {
         parent::__construct(); // panggil constructor Model
         $this->dbs     = db_connect();
-        $this->builder = $this->dbs->table($this->table);
+        $this->builder = $this->dbs->table($this->table . ' d');
     }
 
-    public function datatable()
+    public function searchable()
     {
-        $headerid = service('request')->getPost('headerid'); // ambil dari ajax.data
+        return [
+            null,
+            'p.productname',
+            'u.uomnm',
+            'd.qty',
+            'd.price',
+            null
+        ];
+    }
 
-        $builder = $this->dbs->table('trsalesorderdt d')
-            ->select('d.*, p.productname, u.uomnm')
+
+    public function datatable($sales_id = null, $order = [])
+    {
+        $x = $this->builder->select('d.*, p.productname, u.uomnm')
             ->join('msproduct p', 'p.id = d.productid', 'left')
             ->join('msuom u', 'u.id = d.uomid', 'left');
 
-        if (!empty($headerid)) {
-            $builder->where('d.headerid', $headerid);
+        if (!empty($sales_id)) {
+            $x->where('d.headerid', $sales_id);
         }
+
+        if (!empty($order['columnName'])) {
+            $x->orderBy($order['columnName'], $order['columnOrder']);
+        } else {
+            $x->orderBy('d.id', 'asc');
+        }
+
+        return $x;
+    }
+
+    public function getDetail($column = null, $value = null)
+    {
+        $builder = $this->datatable();
+
+        if (!empty($column) && !empty($value)) {
+            $builder->where($column, $value);
+        }
+
         return $builder;
-    }
-
-    public function getAllByHeader($headerid)
-    {
-        return $this->builder->where('headerid', $headerid)->get()->getResultArray();
-    }
-
-    public function getDetailsByHeader($headerid)
-    {
-        return $this->where('headerid', $headerid)->findAll();
-    }
-
-    public function getOne($id)
-    {
-        return $this->builder->where('id', $id)->get()->getRowArray();
     }
 
     public function store($data)
@@ -66,13 +90,16 @@ class MSalesOrderDetail extends Model
         return $this->builder->insert($data);
     }
 
-    public function edit($data, $id)
+    public function edit($id, $data)
     {
-        return $this->builder->update($data, ['id' => $id]);
+        return $this->builder
+            ->where('d.id', $id)
+            ->update($data);
     }
 
     public function destroy($column, $value)
     {
-        return $this->builder->delete([$column => $value]);
+        return $this->builder
+            ->delete([$column => $value]);
     }
 }

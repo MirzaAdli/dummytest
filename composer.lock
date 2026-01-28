@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "3208e6ef72f92d644f8f008d1cd038c9",
+    "content-hash": "c2231ba6abc96c1f7d8aec48e1e9b568",
     "packages": [
         {
             "name": "brendt/php-sparkline",

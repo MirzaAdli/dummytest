@@ -28,36 +28,64 @@ class MSalesOrder extends Model
     {
         parent::__construct();
         $this->dbs     = db_connect();
-        $this->builder = $this->dbs->table($this->table);
+        $this->builder = $this->dbs->table($this->table . ' h');
     }
 
     public function searchable()
     {
         return [
             null,
-            "transcode",
-            "transdate",
-            "customername",
-            "grandtotal",
-            "description",
+            'transcode',
+            'transdate',
+            'customername',
+            'grandtotal',
+            'description',
         ];
     }
 
-    public function datatable()
+    public function datatable($customer_id = null, $order = [])
     {
-        return $this->dbs->table('trsalesorderhd')
-            ->select("trsalesorderhd.*, mscustomer.customername")
-            ->join("mscustomer", "mscustomer.id = trsalesorderhd.customerid", "left");
+        $x = $this->builder
+            ->select('h.*, c.customername')
+            ->join('mscustomer c', 'c.id = h.customerid', 'left');
+
+        if (!empty($customer_id)) {
+            $x->where('h.customerid', $customer_id);
+        }
+
+        if (!empty($order['columnName'])) {
+            $x->orderBy($order['columnName'], $order['columnOrder']);
+        } else {
+            $x->orderBy('h.id', 'asc');
+        }
+
+        return $x;
     }
 
-    public function getAll()
-    {
-        return $this->builder->get()->getResultArray();
-    }
+        // public function getAll()
+        // {
+        //     return $this->datatable()
+        //         ->get()
+        //         ->getResultArray();
+        // }
 
-    public function getOne($id)
+        // public function getOne($id)
+        // {
+        //     return $this->datatable()
+        //         ->where('h.id', $id)
+        //         ->get()
+        //         ->getRowArray() ?? [];
+        // }
+
+    public function getHeader($column = null, $value = null)
     {
-        return $this->builder->where("id", $id)->get()->getRowArray();
+        $builder = $this->datatable();
+
+        if (!empty($column) && !empty($value)) {
+            $builder->where($column, $value);
+        }
+
+        return $builder;
     }
 
     public function store($data)
@@ -65,32 +93,13 @@ class MSalesOrder extends Model
         return $this->builder->insert($data);
     }
 
-    public function edit($id, $data)
+    public function edit($column, $data)
     {
-        return $this->builder->update($data, ['id' => $id]);
+        return $this->builder->where("h.id", $column)->update($data);
     }
 
     public function destroy($column, $value)
     {
         return $this->builder->delete([$column => $value]);
-    }
-
-    public function isDuplicateTranscode($transcode, $excludeId = null)
-    {
-        $row = $this->where('transcode', $transcode)->first();
-        if (!$row) {
-            return false;
-        }
-        // kalau excludeId diset, pastikan bukan record yang sedang diupdate
-        return $row['id'] != $excludeId;
-    }
-
-    public function updateGrandTotal($headerid, $grandtotal)
-    {
-        return $this->update($headerid, [
-            'grandtotal'  => $grandtotal,
-            'updateddate' => date('Y-m-d H:i:s'),
-            'updatedby'   => session()->get('id'),
-        ]);
     }
 }

@@ -121,20 +121,27 @@ $routes->group('salesorder', function ($routes) {
     $routes->add('add', 'SalesOrder::addData', $this->noauth);
     $routes->add('form', 'SalesOrder::forms', $this->noauth);
     $routes->add('form/(:any)', 'SalesOrder::forms/$1', $this->noauth);
+    $routes->post('form/(:any)/tables', 'SalesOrder::detaildatatable/$1', $this->noauth);
     $routes->add('update', 'SalesOrder::updateData', $this->noauth);
     $routes->add('delete', 'SalesOrder::deleteData', $this->noauth);
+
+    $routes->get('pdf', 'SalesOrder::printPDF', $this->noauth);
+    $routes->get('pdf/(:any)', 'SalesOrder::printPDF/$1', $this->noauth);
 
     //sales order detail routes
     $routes->add('addDetail', 'SalesOrder::addDetail', $this->noauth);
     $routes->add('updateDetail', 'SalesOrder::updateDetail', $this->noauth);
     $routes->add('deleteDetail', 'SalesOrder::deleteDetail', $this->noauth);
-    $routes->add('detaildatatable/(:num)', 'SalesOrder::detaildatatable/$1', $this->noauth);
+    // $routes->post('detaildatatable/(:num)', 'SalesOrder::detaildatatable/$1', $this->noauth);
     $routes->add('getGrandTotal', 'SalesOrder::getGrandTotal', $this->noauth);
+    $routes->add('detailform/(:any)', 'SalesOrder::detailForm/$1');
+
 
     //list for select2
     $routes->post('customer/list', 'SalesOrder::customerList', $this->noauth);
     $routes->post('product/list', 'SalesOrder::productList', $this->noauth);
     $routes->post('uom/list', 'SalesOrder::uomList', $this->noauth);
+
 });
 // -------------------------------------------------------->
 // Log Out

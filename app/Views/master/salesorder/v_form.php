@@ -1,22 +1,17 @@
+<?= $this->include('template/v_header') ?>
+<?= $this->include('template/v_appbar') ?>
 <style>
   .main-content {
-    max-height: 85vh;
-    /* tinggi maksimal 85% layar */
-    overflow-y: auto;
-    /* scroll vertikal otomatis */
-    overflow-x: hidden;
-    /* sembunyikan scroll horizontal */
-    padding-right: 8px;
-    /* biar scrollbar tidak nutup konten */
+    margin-top: 100px;
   }
 </style>
-
 <div class="main-content content">
   <!-- Form Header -->
   <h5 class="fw-bold mb-3"><?= ($form_type == 'edit') ? 'Edit Sales Order' : 'Tambah Sales Order' ?></h5>
   <form id="form-salesorder" class="form" enctype="multipart/form-data">
-    <?php if ($form_type == 'edit') : ?>
-      <input type="hidden" id="id" name="id" value="<?= $headerid ?? ($row['id'] ?? '') ?>">
+    <?php if ($form_type === 'edit'): ?>
+      <input type="hidden" id="headerid" name="headerid"
+        value="<?= !empty($headerid) ? $headerid : (!empty($row['id']) ? $row['id'] : '') ?>">
     <?php endif; ?>
 
     <div class="form-group mb-3">
@@ -51,10 +46,17 @@
       <textarea class="form-control form-control-sm" id="description" name="description" rows="3"><?= ($form_type == 'edit') ? ($row['description'] ?? '') : '' ?></textarea>
     </div>
 
-    <div class="modal-footer">
-
-      <button type="submit" id="btn-submit" class="btn btn-primary btn-sm d-flex align-items-center">
-        <i class="bx bx-check me-1"></i> <?= ($form_type == 'edit' ? 'Update' : 'Save') ?>
+    <div class="modal-footer" style="gap: 10px">
+      <button type="submit" id="btn-submit"
+        class="btn btn-primary btn-sm d-flex align-items-center">
+        <i class="bx bx-check margin-r-2"></i>
+        <span class="fw-normal fs-7"><?= ($form_type == 'edit' ? 'Update' : 'Save') ?></span>
+      </button>
+      <button type="button"
+        class="btn btn-secondary btn-sm d-flex align-items-center"
+        onclick="window.location.href='<?= base_url('salesorder') ?>'">
+        <i class="bx bx-arrow-back margin-r-2"></i>
+        <span class="fw-normal fs-7">Back</span>
       </button>
     </div>
   </form>
@@ -97,17 +99,20 @@
 
       <div class="form-group mb-3">
         <label class="form-label fw-bold">Price</label>
-        <input type="text" id="price" name="price" class="form-control form-control-sm" required>
+        <input type="number" id="price" name="price" class="form-control form-control-sm" required>
       </div>
 
-      <div class="modal-footer">
+      <div class="modal-footer" style="gap: 10px;">
         <button type="submit" id="btn-detail" class="btn btn-primary btn-sm d-flex align-items-center">
-          <i class="bx bx-check me-1"></i> Add
+          <i class="bx bx-check margin-r-2"></i>
+          <span class="fw-normal fs-7">Add</span>
         </button>
-        <button type="button" class="btn btn-warning dflex align-center" id="btn-reset">
-          <i class="bx bx-refresh me-1"></i> Reset
+        <button type="button" class="btn btn-warning dflex align-center" id="btn-reset" onclick="return resetForm('form-detail')" >
+          <i class="bx bx-revision margin-r-2"></i>
+          <span class="fw-normal fs-7">Reset</span>
         </button>
       </div>
+
     </form>
     <hr>
 
@@ -115,15 +120,15 @@
     <div class="card mt-4 shadow-sm w-100 gap">
       <div class="card-body">
         <div class="table-responsive margin-t-14p">
-          <table class="table table-bordered table-responsive-lg table-master fs-7 w-100" id="detailTable">
-            <thead class="table-light">
+          <table class="table table-bordered table-responsive-lg fs-7 w-100" id="detailTable">
+            <thead>
               <tr>
-                <td class="tableheader">No</td>
-                <td class="tableheader">Product</td>
-                <td class="tableheader">UOM</td>
-                <td class="tableheader">Qty</td>
-                <td class="tableheader">Price</td>
-                <td class="tableheader">Actions</td>
+                <th class="tableheader">No</th>
+                <th class="tableheader">Product</th>
+                <th class="tableheader">UOM</th>
+                <th class="tableheader">Qty</th>
+                <th class="tableheader">Price</th>
+                <th class="tableheader">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -134,7 +139,7 @@
     </div>
   <?php endif; ?>
 </div>
-
+<?= $this->include('template/v_footer') ?>
 <script>
   $(document).ready(function() {
 
@@ -160,10 +165,13 @@
           $("#csrf_token").val(encrypter(res.csrfToken));
           $("#csrf_token_form").val("");
           showNotif(res.sukses ? 'success' : 'error', res.pesan);
-          if (res.sukses == 1) {
-            close_modal('modaldetail');
-            tbl.ajax.reload();
 
+          if (res.sukses == 1) {
+            window.location.href = "<?= base_url('salesorder') ?>";
+            close_modal('modaldetail');
+            if (typeof tbl !== 'undefined') {
+              tbl.ajax.reload();
+            }
           }
         },
         error: function(xhr, ajaxOptions, thrownError) {
@@ -191,23 +199,17 @@
         dataType: "json",
         success: function(res) {
           showNotif(res.sukses ? 'success' : 'error', res.pesan);
-          if (res.sukses) {
-            // reset form ke mode Add
-            $('#form-detail')[0].reset();
-            $('#productid, #uomid').val(null).trigger('change');
-            $('#detailid').val('');
-            $('#btn-detail')
-              .html('<i class="bx bx-check me-1"></i> Add')
-              .removeClass('btn-warning')
-              .addClass('btn-primary');
 
-            // update grandtotal di form
+          if (res.sukses) {
+            resetDetailForm();
             $('#grandtotal').text(res.grandtotal);
 
             // reload detail table
-            $('#detailTable').DataTable().ajax.reload(null, false);
+            if (detailTbl) {
+              detailTbl.ajax.reload(null, false);
+            }
 
-            // reload header table kalau perlu
+            // reload header table kalau ada
             if (typeof tbl !== 'undefined') {
               tbl.ajax.reload(null, false);
             }
@@ -216,14 +218,14 @@
             $("#csrf_token").val(encrypter(res.csrfToken));
           }
         },
+        error: function(xhr, ajaxOptions, thrownError) {
+          showError(thrownError + ", please contact administrator.");
+        },
         complete: function() {
-          // aktifkan kembali tombol setelah selesai
           $('#btn-detail').prop('disabled', false);
         }
-
       });
     });
-
     // Select2 server-side
     $('#customerid').select2({
       minimumResultsForSearch: 0,
@@ -281,45 +283,25 @@
     loadTable();
   });
 
-  function loadTable() {
-    $('#detailTable').DataTable({
-      processing: true,
-      serverSide: true,
-      ajax: {
-        url: '<?= base_url("salesorder/detaildatatable/" . ($row['id'] ?? 0)) ?>',
-        type: 'POST',
-        data: function(d) {
-          d.headerid = $('input[name="id"]').val();
-        }
-      },
-      columns: [{
-          data: 0
-        }, // No
-        {
-          data: 1
-        }, // Product
-        {
-          data: 2
-        }, // UOM
-        {
-          data: 3
-        }, // Qty
-        {
-          data: 4
-        }, // Price
-        {
-          data: 5
-        } // Actions
-      ]
-    });
+  let detailTbl;
 
-    $('#btn-reset').on('click', function() {
-      resetDetailForm();
+  function loadTable() {
+    detailTbl = $('#detailTable').DataTable({
+      serverSide: true,
+      processing: true,
+
+      ajax: {
+        url: '<?= base_url(uri_string() . "/tables") ?>',
+        type: 'POST',
+      },
     });
   }
 
-  function deleteDataDt(these, params) {
-    let id = params;
+  function reloadTable() {
+    $('#detailTable').DataTable().ajax.reload();
+  }
+
+  function deleteDataDt(these, id) {
     $(these).attr('disabled', 'disabled');
 
     $.ajax({
@@ -334,35 +316,16 @@
         showNotif(res.sukses ? 'success' : 'error', res.pesan);
 
         if (res.sukses == 1) {
-          $('#form-detail')[0].reset();
-          $('#productid, #uomid').val(null).trigger('change');
-          $('#price').val('');
-          $('#detailid').val('');
+          resetDetailForm();
+          reloadTable();
 
-          reloadTable(); // refresh detail
-          tbl.ajax.reload(); // refresh header
-          $("#csrf_token").val(encrypter(res.csrfToken)); // update token
+          $("#csrf_token").val(encrypter(res.csrfToken));
         }
+      },
+      error: function(xhr, ajaxOptions, thrownError) {
+        showError(thrownError + ", please contact administrator.");
       }
     });
-  }
-
-  function reloadTable() {
-    $('#detailTable').DataTable().destroy();
-    loadTable();
-  }
-
-  function editDetail(id, productId, uomId, qty, price, productName = '') {
-    $('#detailid').val(id);
-    $('#productid').val(productId).trigger('change');
-    $('#uomid').val(uomId).trigger('change');
-    $('#qty').val(parseFloat(qty));
-    $('#price').val(parseFloat(price));
-
-    $('#btn-detail')
-      .html('<i class="bx bx-check me-1"></i> Update')
-      .removeClass('btn-primary')
-      .addClass('btn-warning');
   }
 
   function resetDetailForm() {
@@ -373,6 +336,6 @@
     $('#btn-detail')
       .html('<i class="bx bx-check me-1"></i> Add')
       .removeClass('btn-warning')
-      .addClass('btn-primary'); // ubah tombol kembali ke Add
+      .addClass('btn-primary');
   }
 </script>
