@@ -130,9 +130,7 @@ class SalesOrder extends BaseController
                 $db->transcode,
                 $db->transdate,
                 $db->customername,
-                (intval($db->grandtotal) == $db->grandtotal)
-                    ? intval($db->grandtotal)
-                    : rtrim(rtrim($db->grandtotal, '0'), '.'),
+                'Rp' . number_format($db->grandtotal, 2, ',', '.'),
                 $db->description,
                 "<div style='display:flex;align-items:center;justify-content:center;'>$btn_pdf&nbsp;$btn_edit&nbsp;$btn_hapus</div>"
             ];
@@ -157,8 +155,6 @@ class SalesOrder extends BaseController
         $orderData   = $this->request->getPost('order')[0] ?? [];
         $columnIndex = $orderData['column'] ?? 1;
         $columnOrder = $orderData['dir'] ?? 'asc';
-
-        // kolom sesuai dengan join di model (msproduct, msuom)
         $arrColumn  = [null, "p.productname", "u.uomnm", "d.qty", "d.price"];
         $columnName = $arrColumn[$columnIndex] ?? "d.id";
 
@@ -180,8 +176,8 @@ class SalesOrder extends BaseController
                 $no,
                 $db->productname,
                 $db->uomnm,
-                rtrim(rtrim($db->qty, '0'), '.'),
-                rtrim(rtrim($db->price, '0'), '.'),
+                number_format($db->qty, 0, ',', '.'),
+                'Rp' . number_format($db->price, 2, ',', '.'),
                 "<div style='display:flex;align-items:center;justify-content:center;'>$btn_edit&nbsp;$btn_hapus</div>"
             ];
         });
@@ -636,6 +632,7 @@ class SalesOrder extends BaseController
             ->get()
             ->getResultArray();
         $logo    = FCPATH . 'public/images/hyperdata.png';
+        $ttd    = FCPATH . 'public/images/ttd.png';
 
         $pdf = new FPDF('P', 'mm', 'A4');
         $pdf->AddPage();
@@ -645,69 +642,66 @@ class SalesOrder extends BaseController
         $pdf->SetFont('Arial', 'B', 11);
 
         // LOGO (tinggi 24)
-        $pdf->Cell(35, 24, '', 1, 0, 'C');
+        $pdf->Cell(35, 20, '', 1, 0, 'C');
+        $pdf->Image($logo, $pdf->GetX() - 34, $pdf->GetY() + 1, 34, 17);
 
         // JUDUL (tinggi 24)
-        $pdf->Cell(70, 24, 'SALES ORDER', 1, 0, 'C');
+        $pdf->Cell(70, 20, 'SALES ORDER', 1, 0, 'C');
 
         // ttd
         $pdf->SetFont('Arial', '', 8);
 
         // Baris 1
-        $pdf->Cell(30, 6, 'Dokumen', 1, 0);
-        $pdf->Cell(25, 6, '04.1-FRM-MKT', 1, 0);
-        $pdf->Cell(30, 6, 'Disetujui oleh:', 1, 1, 'C');
+        $pdf->Cell(25, 5, 'Dokumen', 1, 0);
+        $pdf->Cell(30, 5, '04.1-FRM-MKT', 1, 0);
+        $pdf->MultiCell(30, 2.5, "Disetujui oleh:\nManager Mutu", 1, 'C');
 
         // Baris 2
-        $pdf->Cell(105, 6, '', 0, 0);
-        $pdf->Cell(30, 6, 'Revisi', 1, 0);
-        $pdf->Cell(25, 6, '001', 1, 0);
-        $pdf->Cell(30, 6, '', 'LR', 1, 'C');
+        $pdf->Cell(105, 5, '', 0, 0);
+        $pdf->Cell(25, 5, 'Revisi', 1, 0);
+        $pdf->Cell(30, 5, '001', 1, 0);
+        $pdf->Cell(30, 5, '', 'LR', 1, 'C');
+        $pdf->Image($ttd, $pdf->GetX() + 162, $pdf->GetY()-4, 27, 10);
 
         // Baris 3
-        $pdf->Cell(105, 6, '', 0, 0);
-        $pdf->Cell(30, 6, 'Tanggal', 1, 0);
-        $pdf->Cell(25, 6, date('d F Y', strtotime($header['transdate'])), 1, 0);
-        $pdf->Cell(30, 6, '', 'LR', 1, 'C');
+        $pdf->Cell(105, 5, '', 0, 0);
+        $pdf->Cell(25, 5, 'Tanggal Terbit', 1, 0);
+        $pdf->Cell(30, 5, date('d F Y', strtotime($header['transdate'])), 1, 0);
+        $pdf->Cell(30, 5, '', 'LR', 1, 'C');
 
         // Baris 4
-        $pdf->Cell(105, 6, '', 0, 0);
-        $pdf->Cell(30, 6, 'Halaman', 1, 0);
-        $pdf->Cell(25, 6, '1', 1, 0);
-        $pdf->Cell(30, 6, 'Winna Oktavia P.', 1, 1, 'C');
+        $pdf->Cell(105, 5, '', 0, 0);
+        $pdf->Cell(25, 5, 'Halaman', 1, 0);
+        $pdf->Cell(30, 5, '1', 1, 0);
+        $pdf->Cell(30, 5, 'Winna Oktavia P.', 1, 1, 'C');
 
-
-        // Divider
+        //pemisah
         $pdf->Ln(4);
         $pdf->SetLineWidth(0.3);
         $pdf->Line(10, $pdf->GetY(), 200, $pdf->GetY());
-        $pdf->Ln(4);
+        $pdf->Ln(2);
 
         //Info Transaksi
         $pdf->SetFont('Arial', '', 10);
-        $pdf->Cell(40, 6, 'Sales Order No', 0, 0);
-        $pdf->Cell(60, 6, ': ' . $header['transcode'], 0, 0);
-        $pdf->Cell(40, 6, 'Tanggal Order', 0, 0);
+        $pdf->Cell(30, 6, 'No. Sales Order', 0, 0);
+        $pdf->Cell(70, 6, ': ' . $header['transcode'], 0, 0);
+        $pdf->Cell(30, 6, 'Tanggal Order', 0, 0);
         $pdf->Cell(50, 6, ': ' . date('d F Y', strtotime($header['transdate'])), 0, 1);
 
-        $pdf->Cell(40, 6, 'Customer', 0, 0);
-        $pdf->Cell(60, 6, ': ' . $header['customername'], 0, 1);
+        $pdf->Cell(30, 6, 'Customer', 0, 0);
+        $pdf->Cell(50, 6, ': ' . $header['customername'], 0, 1);
 
-        // $pdf->Ln(4);
-        // $pdf->SetLineWidth(0.2);
-        // $pdf->Line(10, $pdf->GetY(), 200, $pdf->GetY());
-        // $pdf->Ln(4);
-
+        $pdf->Ln(2);
 
         //Nama Kolom Tabel
         $pdf->SetFont('Arial', 'B', 10);
-        $pdf->SetFillColor(230, 230, 230);
-        $pdf->Cell(10, 8, 'No', 1, 0, 'C', true);
-        $pdf->Cell(65, 8, 'Product Name', 1, 0, 'C', true);
-        $pdf->Cell(20, 8, 'UOM', 1, 0, 'C', true);
-        $pdf->Cell(20, 8, 'Qty', 1, 0, 'C', true);
-        $pdf->Cell(35, 8, 'Price', 1, 0, 'C', true);
-        $pdf->Cell(40, 8, 'Total', 1, 1, 'C', true);
+        $pdf->Cell(10, 6, 'DATA DETAIL', 0, 1, 'L');
+        $pdf->Cell(10, 6, 'No', 1, 0, 'C');
+        $pdf->Cell(65, 6, 'Product Name', 1, 0, 'C');
+        $pdf->Cell(20, 6, 'UOM', 1, 0, 'C');
+        $pdf->Cell(20, 6, 'Qty', 1, 0, 'C');
+        $pdf->Cell(37.5, 6, 'Price', 1, 0, 'C');
+        $pdf->Cell(37.5, 6, 'Total', 1, 1, 'C');
 
         //Isi Tabel
         $pdf->SetFont('Arial', '', 10);
@@ -715,33 +709,40 @@ class SalesOrder extends BaseController
         $subtotalAll = 0;
 
         foreach ($details as $d) {
-            $subtotal = $d['qty'] * $d['price'];
-            $subtotalAll += $subtotal;
+            $total = $d['qty'] * $d['price'];
+            $subtotalAll += $total;
 
-            $pdf->Cell(10, 8, $no++, 1, 0, 'C');
-            $pdf->Cell(65, 8, $d['productname'], 1);
-            $pdf->Cell(20, 8, $d['uomnm'], 1, 0, 'C');
-            $pdf->Cell(20, 8, $d['qty'], 1, 0, 'C');
-            $pdf->Cell(35, 8, 'Rp. ' . $d['price'], 1, 0, 'L');
-            $pdf->Cell(40, 8, 'Rp. ' . $subtotal, 1, 1, 'L');
+            $qty   = number_format($d['qty'], 0, '.', '.');
+            $price = number_format($d['price'], 2, ',', '.');
+            $total = number_format($total, 2, ',', '.');
+
+            $pdf->Cell(10, 6, $no++, 1, 0, 'C');
+            $pdf->Cell(65, 6, $d['productname'], 1, 0, 'C');
+            $pdf->Cell(20, 6, $d['uomnm'], 1, 0, 'C');
+            $pdf->Cell(20, 6, $qty, 1, 0, 'C');
+            $pdf->Cell(37.5, 6, 'Rp ' . $price, 1, 0, 'R');
+            $pdf->Cell(37.5, 6, 'Rp ' . $total, 1, 1, 'R');
         }
 
-        //Summary
-        $pdf->Ln(6);
+        //Subtotal & grandtotal
+        $pdf->Ln(4);
         $pdf->SetX(120);
-        $pdf->SetFont('Arial', '', 10);
-        $pdf->Cell(40, 8, 'Sub Total', 0, 0);
-        $pdf->Cell(40, 8, 'Rp. ' . $subtotalAll, 0, 1, 'R');
+        $pdf->SetFont('Arial', 'B', 10);
+        $pdf->Cell(50, 8, 'Sub Total', 0, 0, 'R');
+        $pdf->Cell(30, 8, 'Rp ' . number_format($subtotalAll, 2, ',', '.'), 0, 1, 'R');
+        $pdf->Cell(160.5, 8, 'Discount', 0, 0, 'R');
+        $pdf->Cell( 12, 8, 'Rp ', 0, 0, 'R');
+        $pdf->Cell(17.5, 8, '0', 0, 1, 'R');
 
         $pdf->SetX(120);
         $pdf->SetLineWidth(0.3);
-        $pdf->Line(120, $pdf->GetY(), 200, $pdf->GetY());
+        $pdf->Line(145, $pdf->GetY(), 200, $pdf->GetY());
         $pdf->Ln(2);
 
         $pdf->SetFont('Arial', 'B', 10);
-        $pdf->SetX(120);
-        $pdf->Cell(40, 8, 'Grand Total', 0, 0);
-        $pdf->Cell(40, 8, 'Rp. ' . $subtotalAll, 0, 1, 'R');
+        $pdf->SetX(130);
+        $pdf->Cell(40, 8, 'Grand Total', 0, 0, 'R');
+        $pdf->Cell(30, 8, 'Rp ' . number_format($subtotalAll, 2, ',', '.'), 0, 1, 'R');
 
         /* ================= OUTPUT ================= */
         header('Content-Type: application/pdf');

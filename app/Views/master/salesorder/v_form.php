@@ -94,12 +94,16 @@
 
       <div class="form-group mb-3">
         <label class="form-label fw-bold">Qty</label>
-        <input type="number" step="0.001" id="qty" name="qty" class="form-control form-control-sm" required>
+        <input type="number" step="0.001" id="qty" name="qty"
+          class="form-control form-control-sm"
+          value="<?= isset($detail['qty']) ? number_format($detail['qty'], 0, '.', '') : '' ?>" required>
       </div>
 
       <div class="form-group mb-3">
         <label class="form-label fw-bold">Price</label>
-        <input type="number" id="price" name="price" class="form-control form-control-sm" required>
+        <input type="number" step="0.01" id="price" name="price"
+          class="form-control form-control-sm"
+          value="<?= isset($detail['price']) ? number_format($detail['price'], 0, '.', '') : '' ?>" required>
       </div>
 
       <div class="modal-footer" style="gap: 10px;">
@@ -107,7 +111,7 @@
           <i class="bx bx-check margin-r-2"></i>
           <span class="fw-normal fs-7">Add</span>
         </button>
-        <button type="button" class="btn btn-warning dflex align-center" id="btn-reset" onclick="return resetForm('form-detail')" >
+        <button type="button" class="btn btn-warning dflex align-center" id="btn-reset" onclick="return resetForm('form-detail')">
           <i class="bx bx-revision margin-r-2"></i>
           <span class="fw-normal fs-7">Reset</span>
         </button>

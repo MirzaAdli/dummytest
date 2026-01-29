@@ -27,13 +27,14 @@
 
     <div class="form-group">
         <label class="required">Qty :</label>
-        <input type="number" step="0.01" id="qty" name="qty"
+        <input type="number" step="0.001" id="qty" name="qty"
             class="form-control form-control-sm"
-            value="<?= rtrim(rtrim($detail['qty'], '0'), '.') ?>" required>
+            value="<?= isset($detail['qty']) ? number_format($detail['qty'], 0, '.', '') : '' ?>" required>
+
         <label class="required">Price :</label>
         <input type="number" step="0.01" id="price" name="price"
             class="form-control form-control-sm"
-            value="<?= rtrim(rtrim($detail['price'], '0'), '.') ?>" required>
+            value="<?= isset($detail['price']) ? number_format($detail['price'], 2, '', '') : '' ?>" required>
     </div>
 
     <div class="modal-footer">

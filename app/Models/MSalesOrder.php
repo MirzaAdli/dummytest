@@ -62,21 +62,6 @@ class MSalesOrder extends Model
         return $x;
     }
 
-        // public function getAll()
-        // {
-        //     return $this->datatable()
-        //         ->get()
-        //         ->getResultArray();
-        // }
-
-        // public function getOne($id)
-        // {
-        //     return $this->datatable()
-        //         ->where('h.id', $id)
-        //         ->get()
-        //         ->getRowArray() ?? [];
-        // }
-
     public function getHeader($column = null, $value = null)
     {
         $builder = $this->datatable();
