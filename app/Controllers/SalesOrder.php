@@ -10,7 +10,12 @@ use App\Models\MProduct;
 use Exception;
 use App\Helpers\Datatables\Datatables;
 use App\Controllers\BaseController;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Html;
+use PhpOffice\PhpSpreadsheet\Style\Border;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Fpdf\Fpdf;
+use PhpOffice\PhpSpreadsheet\Style\Alignment;
 
 class SalesOrder extends BaseController
 {
@@ -124,6 +129,10 @@ class SalesOrder extends BaseController
             $btn_pdf = "<button type='button' class='btn btn-sm btn-info'
             onclick=\"window.open('" . getURL('salesorder/pdf/' . encrypting($db->id)) . "', '_blank')\">
             <i class='bx bx-printer'></i></button>";
+
+            // $btn_excel = "<button type='button' class='btn btn-sm btn-success btnExport' 
+            //   data-id='" . encrypting($db->id) . "'>
+            //   <i class='bx bx-download'></i></button>";
 
             return [
                 $no,
@@ -636,49 +645,49 @@ class SalesOrder extends BaseController
 
         $pdf = new FPDF('P', 'mm', 'A4');
         $pdf->AddPage();
-        $pdf->SetMargins(10, 10, 10);
+        $pdf->SetMargins(9, 9, 9);
 
         //HEADER
         $pdf->SetFont('Arial', 'B', 11);
 
-        // LOGO (tinggi 24)
-        $pdf->Cell(35, 20, '', 1, 0, 'C');
-        $pdf->Image($logo, $pdf->GetX() - 34, $pdf->GetY() + 1, 34, 17);
+        // LOGO
+        $pdf->Cell(43, 26, '', 1, 0, 'C');
+        $pdf->Image($logo, $pdf->GetX() - 40, $pdf->GetY() + 1, 35, 23);
 
-        // JUDUL (tinggi 24)
-        $pdf->Cell(70, 20, 'SALES ORDER', 1, 0, 'C');
+        // JUDUL
+        $pdf->Cell(70, 26, 'SALES ORDER', 1, 0, 'C');
 
         // ttd
         $pdf->SetFont('Arial', '', 8);
 
         // Baris 1
-        $pdf->Cell(25, 5, 'Dokumen', 1, 0);
-        $pdf->Cell(30, 5, '04.1-FRM-MKT', 1, 0);
-        $pdf->MultiCell(30, 2.5, "Disetujui oleh:\nManager Mutu", 1, 'C');
+        $pdf->Cell(20, 6.5, 'Dokumen', 1, 0);
+        $pdf->Cell(27, 6.5, '04.1-FRM-MKT', 1, 0);
+        $pdf->MultiCell(30, 3.2, "Disetujui oleh:\nManager Mutu", 1, 'C');
 
         // Baris 2
-        $pdf->Cell(105, 5, '', 0, 0);
-        $pdf->Cell(25, 5, 'Revisi', 1, 0);
-        $pdf->Cell(30, 5, '001', 1, 0);
-        $pdf->Cell(30, 5, '', 'LR', 1, 'C');
-        $pdf->Image($ttd, $pdf->GetX() + 162, $pdf->GetY()-4, 27, 10);
+        $pdf->Cell(114, 6.5, '', 0, 0);
+        $pdf->Cell(20, 6.5, 'Revisi', 1, 0);
+        $pdf->Cell(27, 6.5, '001', 1, 0);
+        $pdf->Cell(30, 6.5, '', 'LR', 1, 'C');
+        $pdf->Image($ttd, $pdf->GetX() + 163, $pdf->GetY() - 4, 27, 10);
 
         // Baris 3
-        $pdf->Cell(105, 5, '', 0, 0);
-        $pdf->Cell(25, 5, 'Tanggal Terbit', 1, 0);
-        $pdf->Cell(30, 5, date('d F Y', strtotime($header['transdate'])), 1, 0);
-        $pdf->Cell(30, 5, '', 'LR', 1, 'C');
+        $pdf->Cell(114, 6.5, '', 0, 0);
+        $pdf->Cell(20, 6.5, 'Tanggal Terbit', 1, 0);
+        $pdf->Cell(27, 6.5, date('d F Y', strtotime($header['transdate'])), 1, 0);
+        $pdf->Cell(30, 6.5, '', 'LR', 1, 'C');
 
         // Baris 4
-        $pdf->Cell(105, 5, '', 0, 0);
-        $pdf->Cell(25, 5, 'Halaman', 1, 0);
-        $pdf->Cell(30, 5, '1', 1, 0);
-        $pdf->Cell(30, 5, 'Winna Oktavia P.', 1, 1, 'C');
+        $pdf->Cell(114, 6.5, '', 0, 0);
+        $pdf->Cell(20, 6.5, 'Halaman', 1, 0);
+        $pdf->Cell(27, 6.5, '1', 1, 0);
+        $pdf->Cell(30, 6.5, 'Winna Oktavia P.', 1, 1, 'C');
 
         //pemisah
-        $pdf->Ln(4);
+        $pdf->Ln(6);
         $pdf->SetLineWidth(0.3);
-        $pdf->Line(10, $pdf->GetY(), 200, $pdf->GetY());
+        $pdf->Line(10, $pdf->GetY(), 202, $pdf->GetY());
         $pdf->Ln(2);
 
         //Info Transaksi
@@ -698,8 +707,8 @@ class SalesOrder extends BaseController
         $pdf->Cell(10, 6, 'DATA DETAIL', 0, 1, 'L');
         $pdf->Cell(10, 6, 'No', 1, 0, 'C');
         $pdf->Cell(65, 6, 'Product Name', 1, 0, 'C');
-        $pdf->Cell(20, 6, 'UOM', 1, 0, 'C');
-        $pdf->Cell(20, 6, 'Qty', 1, 0, 'C');
+        $pdf->Cell(21, 6, 'UOM', 1, 0, 'C');
+        $pdf->Cell(21, 6, 'Qty', 1, 0, 'C');
         $pdf->Cell(37.5, 6, 'Price', 1, 0, 'C');
         $pdf->Cell(37.5, 6, 'Total', 1, 1, 'C');
 
@@ -718,21 +727,21 @@ class SalesOrder extends BaseController
 
             $pdf->Cell(10, 6, $no++, 1, 0, 'C');
             $pdf->Cell(65, 6, $d['productname'], 1, 0, 'C');
-            $pdf->Cell(20, 6, $d['uomnm'], 1, 0, 'C');
-            $pdf->Cell(20, 6, $qty, 1, 0, 'C');
+            $pdf->Cell(21, 6, $d['uomnm'], 1, 0, 'C');
+            $pdf->Cell(21, 6, $qty, 1, 0, 'C');
             $pdf->Cell(37.5, 6, 'Rp ' . $price, 1, 0, 'R');
             $pdf->Cell(37.5, 6, 'Rp ' . $total, 1, 1, 'R');
         }
 
         //Subtotal & grandtotal
-        $pdf->Ln(4);
+        $pdf->Ln(8);
         $pdf->SetX(120);
         $pdf->SetFont('Arial', 'B', 10);
         $pdf->Cell(50, 8, 'Sub Total', 0, 0, 'R');
-        $pdf->Cell(30, 8, 'Rp ' . number_format($subtotalAll, 2, ',', '.'), 0, 1, 'R');
+        $pdf->Cell(31, 8, 'Rp ' . number_format($subtotalAll, 2, ',', '.'), 0, 1, 'R');
         $pdf->Cell(160.5, 8, 'Discount', 0, 0, 'R');
-        $pdf->Cell( 12, 8, 'Rp ', 0, 0, 'R');
-        $pdf->Cell(17.5, 8, '0', 0, 1, 'R');
+        $pdf->Cell(9, 8, 'Rp ', 0, 0, 'R');
+        $pdf->Cell(21, 8, '0', 0, 1, 'R');
 
         $pdf->SetX(120);
         $pdf->SetLineWidth(0.3);
@@ -742,12 +751,122 @@ class SalesOrder extends BaseController
         $pdf->SetFont('Arial', 'B', 10);
         $pdf->SetX(130);
         $pdf->Cell(40, 8, 'Grand Total', 0, 0, 'R');
-        $pdf->Cell(30, 8, 'Rp ' . number_format($subtotalAll, 2, ',', '.'), 0, 1, 'R');
+        $pdf->Cell(31, 8, 'Rp ' . number_format($subtotalAll, 2, ',', '.'), 0, 1, 'R');
 
         /* ================= OUTPUT ================= */
         header('Content-Type: application/pdf');
         header('Content-Disposition: inline; filename="SalesOrder_' . $header['transcode'] . '.pdf"');
         $pdf->Output('I');
         exit;
+    }
+
+    public function exportExcel()
+    {
+        $headers = $this->request->getPost('headers');
+        $headers = json_decode($headers, true); // decode JSON ke array php
+
+        $headerStyle = [
+            'font' => [
+                'bold' => true,
+                'color' => ['argb' => 'FFFFFF'],
+            ],
+            'fill' => [
+                'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
+                'startColor' => ['argb' => '4CAF50'],
+            ],
+            'borders' => [
+                'allBorders' => [
+                    'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
+                ],
+            ],
+        ];
+        $dataStyle = [
+            'borders' => [
+                'allBorders' => [
+                    'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
+                ],
+            ],
+        ];
+
+        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+
+        // Judul
+        $sheet->setCellValue('A1', 'SALES ORDER')
+            ->getStyle('A1')->getFont()->setBold(true)->setSize(14);
+        $sheet->mergeCells('A1:M1');
+        $sheet->getStyle('A1')->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+
+        // Header kolom
+        $sheet->setCellValue('A3', 'Transcode');
+        $sheet->mergeCells('A3:B3');
+        $sheet->setCellValue('C3', 'Transdate');
+        $sheet->mergeCells('C3:D3');
+        $sheet->setCellValue('E3', 'Customer');
+        $sheet->mergeCells('E3:F3');
+        $sheet->setCellValue('G3', 'Grand Total');
+        $sheet->mergeCells('G3:H3');
+        $sheet->setCellValue('I3', 'Description');
+        $sheet->mergeCells('I3:M3');
+
+        $sheet->getStyle('A3:M3')->applyFromArray($headerStyle);
+        $sheet->getStyle('A3:M3')->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+
+        // Isi data header
+        $row = 4;
+        foreach ($headers as $h) {
+            $sheet->setCellValue("A{$row}", $h['transcode'] ?? '');
+            $sheet->mergeCells("A$row:B$row");
+            $sheet->setCellValue("C{$row}", isset($h['transdate']) ? date('d M Y', strtotime($h['transdate'])) : '');
+            $sheet->mergeCells("C$row:D$row");
+            $sheet->setCellValue("E{$row}", $h['customername'] ?? '');
+            $sheet->mergeCells("E$row:F$row");
+            $grandtotal = isset($h['grandtotal']) ? number_format($h['grandtotal'], 2, ',', '.') : '0';
+            $sheet->setCellValue("G{$row}", 'Rp ' . $grandtotal);
+            $sheet->mergeCells("G{$row}:H{$row}");
+            $sheet->getStyle("G{$row}:H{$row}")
+                ->getAlignment()
+                ->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_RIGHT);
+            $sheet->getStyle("G$row:H$row")->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT);
+            $sheet->setCellValue("I{$row}", $h['description'] ?? '');
+            $sheet->mergeCells("I$row:M$row");
+
+            $sheet->getStyle("A{$row}:M{$row}")->applyFromArray([
+                'borders' => [
+                    'allBorders' => ['borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN],
+                ],
+            ]);
+            $row++;
+        }
+
+        // Output ke browser
+        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+        $filename ='SalesOrderHeaders.xlsx';
+        return $this->response
+            ->setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+            ->setHeader('Content-Disposition', 'attachment;filename="' . $filename . '"')
+            ->setHeader('Cache-Control', 'max-age=0')
+            ->setBody($writer->save('php://output'));
+        exit;
+
+        // $writer = new Html($spreadsheet);
+        // header('Content-Type: text/html');
+        // $writer->save('php://output');
+        // exit;
+    }
+
+    public function getHeaderChunk()
+    {
+        $limit = $this->request->getGet('limit') ?? 500;
+        $offset = $this->request->getGet('offset') ?? 0;
+
+        log_message('debug', "Chunk request: limit=$limit, offset=$offset");
+
+        $builder = $this->salesModel->getHeader()
+            ->limit($limit, $offset)
+            ->get()
+            ->getResultArray();
+
+        return $this->response->setJSON($builder);
     }
 }

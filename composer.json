@@ -16,6 +16,7 @@
     "dompdf/dompdf": "^3.1",
     "fpdf/fpdf": "^1.86",
     "kint-php/kint": "^5.0",
+    "mpdf/mpdf": "*",
     "phpoffice/phpspreadsheet": "^3.6",
     "setasign/fpdf": "^1.8",
     "tuupola/base62": "^2.1"

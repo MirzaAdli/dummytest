@@ -24,6 +24,27 @@ class Database extends Config
      *
      * @var array<string, mixed>
      */
+    // public array $default = [
+    //     'DSN'          => '',
+    //     'hostname'     => 'localhost',
+    //     'username'     => 'postgres',
+    //     'password'     => 'Mirza123#',
+    //     'database'     => 'dummytest',
+    //     'schema'       => 'public',
+    //     'DBDriver'     => 'Postgre',
+    //     'DBPrefix'     => '',
+    //     'pConnect'     => false,
+    //     'DBDebug'      => true,
+    //     'charset'      => 'utf8',
+    //     'DBCollat'     => '',
+    //     'swapPre'      => '',
+    //     'encrypt'      => false,
+    //     'compress'     => false,
+    //     'strictOn'     => false,
+    //     'failover'     => [],
+    //     'port'         => 5432,
+    // ];
+    
     public array $default = [
         'DSN'          => '',
         'hostname'     => '10.21.1.110',

@@ -125,23 +125,25 @@ $routes->group('salesorder', function ($routes) {
     $routes->add('update', 'SalesOrder::updateData', $this->noauth);
     $routes->add('delete', 'SalesOrder::deleteData', $this->noauth);
 
+    // Export header
+    $routes->add('export', 'SalesOrder::exportExcel', $this->noauth);
+    $routes->get('getHeaderChunk', 'SalesOrder::getHeaderChunk', $this->noauth);
+
+    // PDF
     $routes->get('pdf', 'SalesOrder::printPDF', $this->noauth);
     $routes->get('pdf/(:any)', 'SalesOrder::printPDF/$1', $this->noauth);
 
-    //sales order detail routes
+    // Detail
     $routes->add('addDetail', 'SalesOrder::addDetail', $this->noauth);
     $routes->add('updateDetail', 'SalesOrder::updateDetail', $this->noauth);
     $routes->add('deleteDetail', 'SalesOrder::deleteDetail', $this->noauth);
-    // $routes->post('detaildatatable/(:num)', 'SalesOrder::detaildatatable/$1', $this->noauth);
     $routes->add('getGrandTotal', 'SalesOrder::getGrandTotal', $this->noauth);
     $routes->add('detailform/(:any)', 'SalesOrder::detailForm/$1');
 
-
-    //list for select2
+    // List for select2
     $routes->post('customer/list', 'SalesOrder::customerList', $this->noauth);
     $routes->post('product/list', 'SalesOrder::productList', $this->noauth);
     $routes->post('uom/list', 'SalesOrder::uomList', $this->noauth);
-
 });
 // -------------------------------------------------------->
 // Log Out

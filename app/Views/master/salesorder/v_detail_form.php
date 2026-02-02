@@ -34,7 +34,7 @@
         <label class="required">Price :</label>
         <input type="number" step="0.01" id="price" name="price"
             class="form-control form-control-sm"
-            value="<?= isset($detail['price']) ? number_format($detail['price'], 2, '', '') : '' ?>" required>
+            value="<?= isset($detail['price']) ? number_format($detail['price'], 0, '', '') : '' ?>" required>
     </div>
 
     <div class="modal-footer">
