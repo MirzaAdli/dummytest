@@ -33,6 +33,27 @@
             </div>
         </div>
     </div>
+    <form id="exportexcel" style="padding-inline:0px;">
+        <div class="modal fade" id="modalExport" tabindex="-1" role="dialog" aria-hidden="true">
+            <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
+                <div class="modal-content p-3">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Export Progress</h5>
+                    </div>
+                    <div class="modal-body text-center">
+                        <i class='bx bx-loader-circle bx-spin text-info fs-1'></i>
+                        <h5 class="mt-3">
+                            Processing <span class="text-primary" id="progressPercent">0%</span>
+                        </h5>
+                    </div>
+                    <hr>
+                    <div class="modal-footer d-flex justify-content-center">
+                        <button class="btn btn-warning w-100" type="button" id="btnCancelExport">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
     <?= $this->include('template/v_footer') ?>
     <script>
         function submitData() {
@@ -76,23 +97,44 @@
             exportHeaderChunk();
         });
 
+        let cancelExport = false;
+        let currentRequest = null;
+
         function exportHeaderChunk() {
             let limit = 500;
             let offset = 0;
             let allData = [];
 
+            cancelExport = false;
+            $("#progressPercent").text("0%");
+            $("#modalExport").modal({
+                backdrop: false,
+                keyboard: true
+            }).modal('show');
+
             function loadChunk() {
-                console.log("Request chunk offset:", offset);
-                $.getJSON('salesorder/getHeaderChunk?limit=' + limit + '&offset=' + offset, function(data) {
+                if (cancelExport) {
+                    $("#modalExport").modal('hide');
+                    return;
+                }
+
+                currentRequest = $.getJSON('salesorder/getHeaderChunk?limit=' + limit + '&offset=' + offset, function(data) {
+                    if (cancelExport) return;
+
                     if (data.length > 0) {
                         allData = allData.concat(data);
                         offset += limit;
-                        loadChunk(); // ambil batch berikutnya
-                    } else {
-                        console.log("Total data terkumpul:", allData.length);
 
-                        // kirim ke controller
-                        $.ajax({
+                        // hitung persentase
+                        let percent = Math.min(100, Math.floor((offset / (offset + limit)) * 100));
+                        $("#progressPercent").text(percent + "%");
+                        $("#progressBar").css("width", percent + "%");
+
+                        loadChunk();
+                    } else {
+                        if (cancelExport) return;
+
+                        currentRequest = $.ajax({
                             url: 'salesorder/export',
                             type: 'POST',
                             data: {
@@ -102,18 +144,25 @@
                                 responseType: 'blob'
                             },
                             success: function(blob) {
-                                console.log("Blob size:", blob.size);
+                                if (cancelExport) return;
+
                                 const url = window.URL.createObjectURL(blob);
                                 const link = document.createElement('a');
                                 link.href = url;
-                                link.download = "SalesOrderHeaders_All.xlsx";
+                                link.download = "SalesOrder_Headers.xlsx";
                                 document.body.appendChild(link);
                                 link.click();
                                 document.body.removeChild(link);
                                 window.URL.revokeObjectURL(url);
+
+                                $("#progressPercent").text("100%");
+                                $("#progressBar").css("width", "100%");
+                                $("#modalExport").modal('hide');
                             },
                             error: function(xhr) {
+                                if (cancelExport) return;
                                 console.error("Export failed:", xhr);
+                                $("#modalExport").modal('hide');
                             }
                         });
                     }
@@ -122,4 +171,13 @@
 
             loadChunk();
         }
+
+        // tombol cancel
+        $(document).on("click", "#btnCancelExport", function() {
+            cancelExport = true;
+            if (currentRequest) currentRequest.abort();
+            $("#modalExport").modal('hide');
+            $("#progressPercent").text("0%");
+            $("#progressBar").css("width", "0%");
+        });
     </script>
