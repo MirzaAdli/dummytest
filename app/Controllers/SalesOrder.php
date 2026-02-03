@@ -765,6 +765,11 @@ class SalesOrder extends BaseController
         $headers = $this->request->getPost('headers');
         $headers = json_decode($headers, true); // decode JSON ke array php
 
+        if (!is_array($headers)) {
+            $headers = [];
+        }
+    
+
         $headerStyle = [
             'font' => [
                 'bold' => true,
@@ -842,12 +847,17 @@ class SalesOrder extends BaseController
         // Output ke browser
         $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
         $filename = 'SalesOrderHeaders.xlsx';
+
+        // simpan ke buffer
+        ob_start();
+        $writer->save('php://output');
+        $excelOutput = ob_get_clean();
+
         return $this->response
             ->setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
             ->setHeader('Content-Disposition', 'attachment;filename="' . $filename . '"')
             ->setHeader('Cache-Control', 'max-age=0')
-            ->setBody($writer->save('php://output'));
-        exit;
+            ->setBody($excelOutput);
 
         // $writer = new Html($spreadsheet);
         // header('Content-Type: text/html');
