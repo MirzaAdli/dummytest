@@ -841,7 +841,7 @@ class SalesOrder extends BaseController
 
         // Output ke browser
         $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
-        $filename ='SalesOrderHeaders.xlsx';
+        $filename = 'SalesOrderHeaders.xlsx';
         return $this->response
             ->setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
             ->setHeader('Content-Disposition', 'attachment;filename="' . $filename . '"')
@@ -868,5 +868,11 @@ class SalesOrder extends BaseController
             ->getResultArray();
 
         return $this->response->setJSON($builder);
+    }
+
+    public function getHeaderCount()
+    {
+        $count = $this->salesModel->getHeader()->countAllResults();
+        return $this->response->setJSON(['total' => $count]);
     }
 }

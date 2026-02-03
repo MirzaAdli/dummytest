@@ -128,6 +128,7 @@ $routes->group('salesorder', function ($routes) {
     // Export header
     $routes->add('export', 'SalesOrder::exportExcel', $this->noauth);
     $routes->get('getHeaderChunk', 'SalesOrder::getHeaderChunk', $this->noauth);
+    $routes->get('getHeaderCount', 'SalesOrder::getHeaderCount');
 
     // PDF
     $routes->get('pdf', 'SalesOrder::printPDF', $this->noauth);

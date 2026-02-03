@@ -33,6 +33,7 @@
             </div>
         </div>
     </div>
+
     <form id="exportexcel" style="padding-inline:0px;">
         <div class="modal fade" id="modalExport" tabindex="-1" role="dialog" aria-hidden="true">
             <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
@@ -54,6 +55,7 @@
             </div>
         </div>
     </form>
+
     <?= $this->include('template/v_footer') ?>
     <script>
         function submitData() {
@@ -104,72 +106,78 @@
             let limit = 500;
             let offset = 0;
             let allData = [];
+            let totalRecords = 0;
 
             cancelExport = false;
             $("#progressPercent").text("0%");
+            $("#progressBar").css("width", "0%");
             $("#modalExport").modal({
                 backdrop: false,
                 keyboard: true
             }).modal('show');
 
-            function loadChunk() {
-                if (cancelExport) {
-                    $("#modalExport").modal('hide');
-                    return;
-                }
+            // ambil total record dulu
+            $.getJSON('salesorder/getHeaderCount', function(res) {
+                totalRecords = res.total;
 
-                currentRequest = $.getJSON('salesorder/getHeaderChunk?limit=' + limit + '&offset=' + offset, function(data) {
-                    if (cancelExport) return;
+                function loadChunk() {
+                    if (cancelExport) {
+                        $("#modalExport").modal('hide');
+                        return;
+                    }
 
-                    if (data.length > 0) {
-                        allData = allData.concat(data);
-                        offset += limit;
-
-                        // hitung persentase
-                        let percent = Math.min(100, Math.floor((offset / (offset + limit)) * 100));
-                        $("#progressPercent").text(percent + "%");
-                        $("#progressBar").css("width", percent + "%");
-
-                        loadChunk();
-                    } else {
+                    currentRequest = $.getJSON('salesorder/getHeaderChunk?limit=' + limit + '&offset=' + offset, function(data) {
                         if (cancelExport) return;
 
-                        currentRequest = $.ajax({
-                            url: 'salesorder/export',
-                            type: 'POST',
-                            data: {
-                                headers: JSON.stringify(allData)
-                            },
-                            xhrFields: {
-                                responseType: 'blob'
-                            },
-                            success: function(blob) {
-                                if (cancelExport) return;
+                        if (data.length > 0) {
+                            allData = allData.concat(data);
+                            offset += data.length;
 
-                                const url = window.URL.createObjectURL(blob);
-                                const link = document.createElement('a');
-                                link.href = url;
-                                link.download = "SalesOrder_Headers.xlsx";
-                                document.body.appendChild(link);
-                                link.click();
-                                document.body.removeChild(link);
-                                window.URL.revokeObjectURL(url);
+                            // hitung persentase berdasarkan totalRecords
+                            let percent = Math.min(100, Math.floor((offset / totalRecords) * 100));
+                            $("#progressPercent").text(percent + "%");
+                            $("#progressBar").css("width", percent + "%");
 
-                                $("#progressPercent").text("100%");
-                                $("#progressBar").css("width", "100%");
-                                $("#modalExport").modal('hide');
-                            },
-                            error: function(xhr) {
-                                if (cancelExport) return;
-                                console.error("Export failed:", xhr);
-                                $("#modalExport").modal('hide');
-                            }
-                        });
-                    }
-                });
-            }
+                            loadChunk();
+                        } else {
+                            // semua data sudah diambil → baru export
+                            currentRequest = $.ajax({
+                                url: 'salesorder/export',
+                                type: 'POST',
+                                data: {
+                                    headers: JSON.stringify(allData)
+                                },
+                                xhrFields: {
+                                    responseType: 'blob'
+                                },
+                                success: function(blob) {
+                                    if (cancelExport) return;
 
-            loadChunk();
+                                    const url = window.URL.createObjectURL(blob);
+                                    const link = document.createElement('a');
+                                    link.href = url;
+                                    link.download = "SalesOrder_Headers.xlsx";
+                                    document.body.appendChild(link);
+                                    link.click();
+                                    document.body.removeChild(link);
+                                    window.URL.revokeObjectURL(url);
+
+                                    $("#progressPercent").text("100%");
+                                    $("#progressBar").css("width", "100%");
+                                    $("#modalExport").modal('hide');
+                                },
+                                error: function(xhr) {
+                                    if (cancelExport) return;
+                                    console.error("Export failed:", xhr);
+                                    $("#modalExport").modal('hide');
+                                }
+                            });
+                        }
+                    });
+                }
+
+                loadChunk();
+            });
         }
 
         // tombol cancel
