@@ -109,7 +109,6 @@
 
         cancelExport = false;
         $("#progressPercent").text("0%");
-        $("#progressBar").css("width", "0%");
         $("#modalExport").modal({
             backdrop: 'static',
             keyboard: false
@@ -135,7 +134,6 @@
                         // hitung persentase berdasarkan totalRecords
                         let percent = Math.min(100, Math.floor((offset / totalRecords) * 100));
                         $("#progressPercent").text(percent + "%");
-                        $("#progressBar").css("width", percent + "%");
 
                         loadChunk();
                     } else {
@@ -158,16 +156,16 @@
                                 link.href = url;
                                 link.download = "SalesOrder_Headers.xlsx";
                                 document.body.appendChild(link);
+
+                                setTimeout(function() {
+                                    $("#modalExport").modal('hide');
+                                }, 1500);
+
                                 link.click();
                                 document.body.removeChild(link);
                                 window.URL.revokeObjectURL(url);
 
                                 $("#progressPercent").text("100%");
-                                $("#progressBar").css("width", "100%");
-
-                                setTimeout(function() {
-                                    $("#modalExport").modal('hide');
-                                }, 1500);
                             },
                             error: function(xhr) {
                                 if (cancelExport) return;
@@ -189,6 +187,5 @@
         if (currentRequest) currentRequest.abort();
         $("#modalExport").modal('hide');
         $("#progressPercent").text("0%");
-        $("#progressBar").css("width", "0%");
     });
 </script>

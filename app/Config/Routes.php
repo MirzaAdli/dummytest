@@ -127,12 +127,12 @@ $routes->group('salesorder', function ($routes) {
 
     // Export header
     $routes->add('export', 'SalesOrder::exportExcel', $this->noauth);
-    $routes->get('getHeaderChunk', 'SalesOrder::getHeaderChunk', $this->noauth);
-    $routes->get('getHeaderCount', 'SalesOrder::getHeaderCount', $this->noauth);
+    $routes->add('getHeaderChunk', 'SalesOrder::getHeaderChunk', $this->noauth);
+    $routes->add('getHeaderCount', 'SalesOrder::getHeaderCount', $this->noauth);
 
     // PDF
-    $routes->get('pdf', 'SalesOrder::printPDF', $this->noauth);
-    $routes->get('pdf/(:any)', 'SalesOrder::printPDF/$1', $this->noauth);
+    $routes->add('pdf', 'SalesOrder::printPDF', $this->noauth);
+    $routes->add('pdf/(:any)', 'SalesOrder::printPDF/$1', $this->noauth);
 
     // Detail
     $routes->add('addDetail', 'SalesOrder::addDetail', $this->noauth);

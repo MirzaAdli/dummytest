@@ -763,12 +763,12 @@ class SalesOrder extends BaseController
     public function exportExcel()
     {
         $headers = $this->request->getPost('headers');
-        $headers = json_decode($headers, true); // decode JSON ke array php
-
-        if (!is_array($headers)) {
-            $headers = [];
+        if (empty($headers)) {
+            $headers = $this->salesModel->findAll();
+        } else {
+            $headers = json_decode($headers, true);
         }
-    
+
 
         $headerStyle = [
             'font' => [
