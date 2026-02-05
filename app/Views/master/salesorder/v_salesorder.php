@@ -137,7 +137,7 @@
 
                         loadChunk();
                     } else {
-                        // semua data sudah diambil → baru export
+                        // semua data sudah diambil -> baru export
                         currentRequest = $.ajax({
                             url: 'salesorder/export',
                             type: 'POST',
@@ -150,13 +150,21 @@
                             },
                             success: function(blob) {
                                 if (cancelExport) return;
-                                $("#progressPercent").text("100%");
 
+                                const url = window.URL.createObjectURL(blob);
+                                const link = document.createElement('a');
+                                link.href = url;
+                                link.download = "SalesOrder_Headers.xlsx";
+                                document.body.appendChild(link);
+
+                                $("#progressPercent").text("100%");
                                 setTimeout(function() {
                                     $("#modalExport").modal('hide');
                                 }, 1500);
-                                
-                                saveAs(blob, "SalesOrder_Headers.xlsx");
+
+                                link.click();
+                                document.body.removeChild(link);
+                                window.URL.revokeObjectURL(url);
                             },
                             error: function(xhr) {
                                 if (cancelExport) return;
