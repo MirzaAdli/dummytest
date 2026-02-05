@@ -150,22 +150,13 @@
                             },
                             success: function(blob) {
                                 if (cancelExport) return;
-
-                                const url = window.URL.createObjectURL(blob);
-                                const link = document.createElement('a');
-                                link.href = url;
-                                link.download = "SalesOrder_Headers.xlsx";
-                                document.body.appendChild(link);
+                                $("#progressPercent").text("100%");
 
                                 setTimeout(function() {
                                     $("#modalExport").modal('hide');
                                 }, 1500);
-
-                                link.click();
-                                document.body.removeChild(link);
-                                window.URL.revokeObjectURL(url);
-
-                                $("#progressPercent").text("100%");
+                                
+                                saveAs(blob, "SalesOrder_Headers.xlsx");
                             },
                             error: function(xhr) {
                                 if (cancelExport) return;
