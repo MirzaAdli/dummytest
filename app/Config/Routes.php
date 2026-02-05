@@ -142,7 +142,7 @@ $routes->group('salesorder', function ($routes) {
     $routes->add('detailform/(:any)', 'SalesOrder::detailForm/$1');
 
     // List for select2
-    $routes->post('customer/list', 'SalesOrder::customerList', $this->noauth);
+    $routes->add('customer/list', 'SalesOrder::customerList', $this->noauth);
     $routes->post('product/list', 'SalesOrder::productList', $this->noauth);
     $routes->post('uom/list', 'SalesOrder::uomList', $this->noauth);
 });

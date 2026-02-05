@@ -137,7 +137,7 @@
 
                         loadChunk();
                     } else {
-                        // semua data sudah diambil -> baru export
+                        // semua data sudah diambil → baru export
                         currentRequest = $.ajax({
                             url: 'salesorder/export',
                             type: 'POST',
@@ -156,19 +156,17 @@
                                 link.href = url;
                                 link.download = "SalesOrder_Headers.xlsx";
                                 document.body.appendChild(link);
-
-                                $("#progressPercent").text("100%");
-                                setTimeout(function() {
-                                    $("#modalExport").modal('hide');
-                                }, 1500);
-
                                 link.click();
                                 document.body.removeChild(link);
                                 window.URL.revokeObjectURL(url);
+                                $("#progressPercent").text("100%");
                             },
                             error: function(xhr) {
                                 if (cancelExport) return;
                                 console.error("Export failed:", xhr);
+                            },
+                            complete: function() {
+                                if (cancelExport) return;
                                 $("#modalExport").modal('hide');
                             }
                         });

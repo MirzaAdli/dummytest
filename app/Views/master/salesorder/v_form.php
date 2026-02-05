@@ -23,7 +23,7 @@
     <div class="form-group mb-3">
       <label for="transdate" class="form-label fw-bold">Transaction Date</label>
       <input type="date" class="form-control form-control-sm" id="transdate" name="transdate"
-        value="<?= ($form_type == 'edit') ? ($row['transdate'] ?? date('Y-m-d')) : date('Y-m-d') ?>" required>
+        value="<?= ($form_type == 'edit') ? ($row['transdate'] ?? date('d-m-Y')) : date('d-m-Y') ?>" required>
     </div>
 
     <div class="form-group mb-3">

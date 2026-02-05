@@ -137,7 +137,7 @@ class SalesOrder extends BaseController
             return [
                 $no,
                 $db->transcode,
-                $db->transdate,
+                date('d-m-Y', strtotime($db->transdate)),
                 $db->customername,
                 'Rp' . number_format($db->grandtotal, 2, ',', '.'),
                 $db->description,
