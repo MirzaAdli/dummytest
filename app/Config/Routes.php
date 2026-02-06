@@ -125,10 +125,14 @@ $routes->group('salesorder', function ($routes) {
     $routes->add('update', 'SalesOrder::updateData', $this->noauth);
     $routes->add('delete', 'SalesOrder::deleteData', $this->noauth);
 
-    // Export header
+    // Export
     $routes->add('export', 'SalesOrder::exportExcel', $this->noauth);
     $routes->add('getHeaderChunk', 'SalesOrder::getHeaderChunk', $this->noauth);
     $routes->add('getHeaderCount', 'SalesOrder::getHeaderCount', $this->noauth);
+
+    // Import
+    $routes->add('formImport', 'SalesOrder::formImport', $this->noauth);
+    $routes->add('importExcel', 'SalesOrder::importExcel', $this->noauth);
 
     // PDF
     $routes->add('pdf', 'SalesOrder::printPDF', $this->noauth);

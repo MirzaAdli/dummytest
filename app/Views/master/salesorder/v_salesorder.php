@@ -2,16 +2,53 @@
 <?= $this->include('template/v_appbar') ?>
 
 <div class="main-content content margin-t-4">
-    <div class="card-header dflex align-center justify-end  margin-r-2">
-        <a href="<?= site_url('salesorder/form') ?>"
-            class="btn btn-primary d-flex align-center">
-            <i class="bx bx-plus-circle margin-r-2"></i>
-            <span class="fw-normal fs-7">Add New</span>
-        </a>
-        <a href="#" class="btn btn-success btnExport margin-l-2">
-            <i class="bx bx-download margin-r-2"></i>
-            <span class="fw-normal fs-7">Export</span>
-        </a>
+    <div class="card-header d-flex align-items-center" style="gap:10px;">
+        <div class="card-header d-flex" style="gap:35px;">
+            <!-- Filter tanggal -->
+            <div class="d-flex flex-column" style="width:150px;">
+                <label for="dateFrom" class="form-label mb-0" style="font-size:0.75rem;">From Date</label>
+                <input type="date" id="dateFrom" name="dateFrom"
+                    class="form-control form-control-sm rounded" style="width:110px;">
+            </div>
+
+            <div class="d-flex flex-column" style="width:150px;">
+                <label for="dateTo" class="form-label mb-0" style="font-size:0.75rem;">To Date</label>
+                <input type="date" id="dateTo" name="dateTo"
+                    class="form-control form-control-sm rounded" style="width:110px;">
+            </div>
+
+            <div class="form-floating" style="width:150px;">
+                <label for="customerid" style="font-size:0.75rem;">Customer</label>
+                <select id="customerid" name="customerid"
+                    class="form-select form-select-sm rounded">
+                </select>
+            </div>
+
+            <div class="d-flex align-items-end ms-auto gap-2">
+                <button type="button" id="btnFilter" class="btn btn-info btn-sm">
+                    <i class="bx bx-search"></i> Filter
+                </button>
+                <button type="button" id="btnReset" class="btn btn-secondary btn-sm">
+                    <i class="bx bx-reset"></i> Reset
+                </button>
+            </div>
+        </div>
+
+        <!-- Action buttons -->
+        <div class="d-flex align-items-end ms-auto gap-2">
+            <button type="button" id="btnAddNew" class="btn btn-primary btn-sm"
+                onclick="window.location.href='<?= site_url('salesorder/form') ?>'">
+                <i class="bx bx-plus-circle"></i> Add New
+            </button>
+            <button type="button" id="btnExport" class="btn btn-success btn-sm btnExport">
+                <i class="bx bx-download"></i> Export
+            </button>
+            <button type="button" class="btn btn-warning btn-sm"
+                onclick="return modalForm('Import Sales Order', 'modal-lg', '<?= getURL('salesorder/formImport') ?>')">
+                <i class="bx bx-upload margin-r-2"></i>
+                <span class="fw-normal fs-7">Import</span>
+            </button>
+        </div>
     </div>
     <div class="card-body">
         <div class="table-responsive margin-t-14p">
@@ -57,35 +94,108 @@
     </div>
 </form>
 <script>
+    let cancelExport = false;
+    let currentRequest = null;
+
+    $(document).ready(function() {
+        // Init DataTable
+        initDataTable();
+
+        // Init Select2 Customer
+        $('#customerid').select2({
+            placeholder: '-- Select Name--',
+            allowClear: true,
+            width: '170px',
+            ajax: {
+                url: '<?= base_url("salesorder/customer/list") ?>',
+                type: 'POST',
+                dataType: 'json',
+                delay: 250,
+                data: params => ({
+                    search: params.term
+                }),
+                processResults: data => ({
+                    results: data.items
+                })
+            }
+        });
+
+        // Event tombol Filter
+        $('#btnFilter').on('click', function() {
+            tbl.ajax.reload(null, false);
+        });
+
+        $('#btnReset').on('click', function() {
+            // kosongkan semua filter
+            $('#dateFrom').val('');
+            $('#dateTo').val('');
+            $('#customerid').val('').trigger('change'); // kalau pakai Select2
+
+            // reload DataTable tanpa filter
+            tbl.ajax.reload();
+        });
+
+        // Event Export
+        $('#btnExport').on('click', function() {
+            exportHeaderChunk();
+        });
+
+        // Event Cancel Export
+        $('#btnCancelExport').on('click', function() {
+            cancelExport = true;
+            if (currentRequest) currentRequest.abort();
+            $("#modalExport").modal('hide');
+            $("#progressPercent").text("0%");
+        });
+    });
+
+    // Init DataTable
+    function initDataTable() {
+        tbl = $('#dataTable').DataTable({
+            serverSide: true,
+            processing: true,
+            destroy: true,
+            ajax: {
+                url: '<?= base_url("salesorder/table") ?>',
+                type: 'POST',
+                data: function(d) {
+                    // hanya tambahkan filter custom + CSRF
+                    d.dateFrom = $('#dateFrom').val();
+                    d.dateTo = $('#dateTo').val();
+                    d.customerid = $('#customerid').val();
+                    d['<?= csrf_token() ?>'] = '<?= csrf_hash() ?>';
+                }
+            }
+        });
+    }
+
+    // Submit data (form simpan)
     function submitData() {
         let link = $('#linksubmit').val(),
             transcode = $('#transcode').val(),
             transdate = $('#transdate').val(),
-            customername = $('#customername').val(),
+            customerid = $('#customerid').val(),
             description = $('#description').val(),
             id = $('#id').val();
 
         $.ajax({
             url: link,
-            type: 'post',
+            type: 'POST',
             dataType: 'json',
             data: {
                 transcode: transcode,
                 transdate: transdate,
-                customername: customername,
+                customerid: customerid,
                 description: description,
-                id: id
+                id: id,
+                <?= csrf_token() ?>: '<?= csrf_hash() ?>'
             },
             success: function(res) {
+                alert(res.pesan);
                 if (res.sukses === '1') {
-                    alert(res.pesan);
-                    $('#transcode').val("");
-                    $('#transdate').val("");
-                    $('#customername').val("");
-                    $('#description').val("");
-                    tbl.ajax.reload();
-                } else {
-                    alert(res.pesan);
+                    $('#transcode, #transdate, #description').val("");
+                    $('#customerid').val(null).trigger('change');
+                    tbl.ajax.reload(null, false);
                 }
             },
             error: function(xhr, ajaxOptions, thrownError) {
@@ -94,13 +204,7 @@
         });
     }
 
-    $(document).on("click", ".btnExport", function() {
-        exportHeaderChunk();
-    });
-
-    let cancelExport = false;
-    let currentRequest = null;
-
+    // Export chunked
     function exportHeaderChunk() {
         let limit = 500;
         let offset = 0;
@@ -114,8 +218,11 @@
             keyboard: false
         }).modal('show');
 
-        // ambil total record dulu
-        $.getJSON('salesorder/getHeaderCount', function(res) {
+        $.getJSON('salesorder/getHeaderCount', {
+            dateFrom: $('#dateFrom').val(),
+            dateTo: $('#dateTo').val(),
+            customerid: $('#customerid').val()
+        }, function(res) {
             totalRecords = res.total;
 
             function loadChunk() {
@@ -124,25 +231,32 @@
                     return;
                 }
 
-                currentRequest = $.getJSON('salesorder/getHeaderChunk?limit=' + limit + '&offset=' + offset, function(data) {
+                currentRequest = $.getJSON('salesorder/getHeaderChunk', {
+                    limit: limit,
+                    offset: offset,
+                    dateFrom: $('#dateFrom').val(),
+                    dateTo: $('#dateTo').val(),
+                    customerid: $('#customerid').val()
+                }, function(data) {
                     if (cancelExport) return;
 
                     if (data.length > 0) {
                         allData = allData.concat(data);
                         offset += data.length;
 
-                        // hitung persentase berdasarkan totalRecords
                         let percent = Math.min(100, Math.floor((offset / totalRecords) * 100));
                         $("#progressPercent").text(percent + "%");
 
                         loadChunk();
                     } else {
-                        // semua data sudah diambil → baru export
                         currentRequest = $.ajax({
                             url: 'salesorder/export',
                             type: 'POST',
                             data: {
                                 headers: JSON.stringify(allData),
+                                dateFrom: $('#dateFrom').val(),
+                                dateTo: $('#dateTo').val(),
+                                customerid: $('#customerid').val(),
                                 <?= csrf_token() ?>: '<?= csrf_hash() ?>'
                             },
                             xhrFields: {
@@ -150,7 +264,7 @@
                             },
                             success: function(blob) {
                                 if (cancelExport) return;
-
+                                $("#modalExport").modal('hide');
                                 const url = window.URL.createObjectURL(blob);
                                 const link = document.createElement('a');
                                 link.href = url;
@@ -162,12 +276,11 @@
                                 $("#progressPercent").text("100%");
                             },
                             error: function(xhr) {
-                                if (cancelExport) return;
-                                console.error("Export failed:", xhr);
+                                alert("Export gagal");
                             },
                             complete: function() {
                                 if (cancelExport) return;
-                                $("#modalExport").modal('hide');
+                                setTimeout(() => $("#modalExport").modal('hide'), 1500);
                             }
                         });
                     }
@@ -177,12 +290,4 @@
             loadChunk();
         });
     }
-
-    // tombol cancel
-    $(document).on("click", "#btnCancelExport", function() {
-        cancelExport = true;
-        if (currentRequest) currentRequest.abort();
-        $("#modalExport").modal('hide');
-        $("#progressPercent").text("0%");
-    });
 </script>

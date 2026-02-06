@@ -36,25 +36,35 @@ class MSalesOrder extends Model
         return [
             null,
             'transcode',
-            'transdate',
+            'h.transdate',
             'customername',
             'grandtotal',
             'description',
         ];
     }
 
-    public function datatable($customer_id = null, $order = [])
+    public function datatable($params = [])
     {
         $x = $this->builder
             ->select('h.*, c.customername')
             ->join('mscustomer c', 'c.id = h.customerid', 'left');
 
-        if (!empty($customer_id)) {
-            $x->where('h.customerid', $customer_id);
+        // Filter tanggal
+        if (!empty($params['dateFrom']) && !empty($params['dateTo'])) {
+            $x->where('h.transdate >=', $params['dateFrom'])
+                ->where('h.transdate <=', $params['dateTo']);
+        } elseif (!empty($params['dateFrom'])) {
+            $x->where("h.transdate >=", $params['dateFrom']);
         }
 
-        if (!empty($order['columnName'])) {
-            $x->orderBy($order['columnName'], $order['columnOrder']);
+        // Filter customer
+        if (!empty($params['customerid'])) {
+            $x->where('h.customerid', $params['customerid']);
+        }
+
+        // Order
+        if (!empty($params['columnName'])) {
+            $x->orderBy($params['columnName'], $params['columnOrder']);
         } else {
             $x->orderBy('h.id', 'asc');
         }
@@ -86,5 +96,16 @@ class MSalesOrder extends Model
     public function destroy($column, $value)
     {
         return $this->builder->delete([$column => $value]);
+    }
+
+    public function findCustomerId(string $customername): ?int
+    {
+        $row = $this->dbs->table('mscustomer')
+            ->select('id')
+            ->where('customername', $customername)
+            ->get()
+            ->getRow();
+
+        return $row ? (int) $row->id : null;
     }
 }

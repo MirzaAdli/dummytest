@@ -108,15 +108,32 @@ class SalesOrder extends BaseController
 
     public function datatable()
     {
-        $columnIndex = $this->request->getPost('order')[0]['column'];
-        $columnOrder = $this->request->getPost('order')[0]['dir'];
-        $arrColumn = [null, "h.transcode", "h.transdate", "c.customername", "h.grandtotal", "h.description"];
-        $columnName = $arrColumn[$columnIndex];
+        $orderData   = $this->request->getPost('order')[0] ?? [];
+        $columnIndex = $orderData['column'] ?? 1;
+        $columnOrder = $orderData['dir'] ?? 'asc';
 
-        $table = Datatables::method([$this->salesModel::class, 'datatable'], 'searchable')
-            ->setParams(null, ['columnName' => $columnName, 'columnOrder' => $columnOrder])
+        $arrColumn   = [null, "h.transcode", "h.transdate", "c.customername", "h.grandtotal", "h.description"];
+        $columnName  = $arrColumn[$columnIndex] ?? "h.transcode";
+
+        // ambil filter dari request
+        $dateFrom   = $this->request->getPost('dateFrom');
+        $dateTo     = $this->request->getPost('dateTo');
+        $customerid = $this->request->getPost('customerid');
+
+        // panggil Datatables helper dengan instance model
+        $table = Datatables::method([$this->salesModel, 'datatable'], 'searchable')
+            ->setParams([
+                [
+                    'columnName'  => $columnName,
+                    'columnOrder' => $columnOrder,
+                    'dateFrom'    => $dateFrom,
+                    'dateTo'      => $dateTo,
+                    'customerid'  => $customerid
+                ]
+            ])
             ->make();
 
+        // format row output
         $table->updateRow(function ($db, $no) {
             $btn_edit = "<button type='button' class='btn btn-sm btn-warning'
             onclick=\"window.location.href='" . getURL('salesorder/form/' . encrypting($db->id)) . "'\">
@@ -130,14 +147,10 @@ class SalesOrder extends BaseController
             onclick=\"window.open('" . getURL('salesorder/pdf/' . encrypting($db->id)) . "', '_blank')\">
             <i class='bx bx-printer'></i></button>";
 
-            // $btn_excel = "<button type='button' class='btn btn-sm btn-success btnExport' 
-            //   data-id='" . encrypting($db->id) . "'>
-            //   <i class='bx bx-download'></i></button>";
-
             return [
                 $no,
                 $db->transcode,
-                date('d-m-Y', strtotime($db->transdate)),
+                date('d-F-Y', strtotime($db->transdate)),
                 $db->customername,
                 'Rp' . number_format($db->grandtotal, 2, ',', '.'),
                 $db->description,
@@ -763,12 +776,14 @@ class SalesOrder extends BaseController
     public function exportExcel()
     {
         $headers = $this->request->getPost('headers');
+        $dateFrom = $this->request->getPost('dateFrom');
+        $dateTo = $this->request->getPost('dateTo');
+        $customerid = $this->request->getPost('customerid');
         if (empty($headers)) {
-            $headers = $this->salesModel->findAll();
+            $headers = $this->salesModel->datatable(['dateFrom' => $dateFrom, 'dateTo' => $dateTo, 'customerid' => $customerid])->get()->getResultArray();
         } else {
             $headers = json_decode($headers, true);
         }
-
 
         $headerStyle = [
             'font' => [
@@ -865,24 +880,103 @@ class SalesOrder extends BaseController
         // exit;
     }
 
-    public function getHeaderChunk()
-    {
-        $limit = $this->request->getGet('limit') ?? 500;
-        $offset = $this->request->getGet('offset') ?? 0;
-
-        log_message('debug', "Chunk request: limit=$limit, offset=$offset");
-
-        $builder = $this->salesModel->getHeader()
-            ->limit($limit, $offset)
-            ->get()
-            ->getResultArray();
-
-        return $this->response->setJSON($builder);
-    }
-
     public function getHeaderCount()
     {
-        $count = $this->salesModel->getHeader()->countAllResults();
+        $dateFrom   = $this->request->getGet('dateFrom');
+        $dateTo     = $this->request->getGet('dateTo');
+        $customerid = $this->request->getGet('customerid');
+
+        $builder = $this->salesModel->datatable([
+            'dateFrom'   => $dateFrom,
+            'dateTo'     => $dateTo,
+            'customerid' => $customerid
+        ]);
+
+        $count = $builder->countAllResults();
         return $this->response->setJSON(['total' => $count]);
+    }
+
+
+    public function getHeaderChunk()
+    {
+        $limit      = $this->request->getGet('limit') ?? 500;
+        $offset     = $this->request->getGet('offset') ?? 0;
+        $dateFrom   = $this->request->getGet('dateFrom');
+        $dateTo     = $this->request->getGet('dateTo');
+        $customerid = $this->request->getGet('customerid');
+
+        $builder = $this->salesModel->datatable([
+            'dateFrom'   => $dateFrom,
+            'dateTo'     => $dateTo,
+            'customerid' => $customerid
+        ]);
+
+        $data = $builder->limit($limit, $offset)->get()->getResultArray();
+        return $this->response->setJSON($data);
+    }
+
+    public function formImport()
+    {
+        $dt['view'] = view('master/salesorder/v_import', []);
+        $dt['csrfToken'] = csrf_hash();
+        echo json_encode($dt);
+    }
+
+    public function importExcel()
+    {
+        $datas = json_decode($this->request->getPost('datas'), true);
+        $res = [];
+        $this->db->transBegin();
+        try {
+            $undfhSO = 0;
+            $undfhSOarr = [];
+
+            foreach ($datas as $dt) {
+                // validasi minimal kolom (Transcode, Transdate, Customer, GrandTotal)
+                if (empty($dt[0]) || empty($dt[1]) || empty($dt[2]) || empty($dt[3])) {
+                    $undfhSO++;
+                    $undfhSOarr[] = $dt[0] ?? '-';
+                    continue;
+                }
+
+                // mapping customername ke customerid
+                $customerid = $this->salesModel->findCustomerId($dt[2]);
+                if (!$customerid) {
+                    $undfhSO++;
+                    $undfhSOarr[] = $dt[0];
+                    continue;
+                }
+
+                // Simpan SalesOrder Header
+                $this->salesModel->insert([
+                    'transcode'   => trim($dt[0]), // Transcode
+                    'transdate'   => date('Y-m-d', strtotime($dt[1])), // Transdate
+                    'customerid'  => $customerid, // Customer ID hasil mapping
+                    'grandtotal'  => preg_replace('/[^0-9]/', '', $dt[3]), // Grand Total
+                    'description' => trim($dt[4] ?? ''), // Description
+                    'createddate' => date('Y-m-d H:i:s'),
+                    'createdby'   => getSession('userid'),
+                    'updateddate' => date('Y-m-d H:i:s'),
+                    'updatedby'   => getSession('userid'),
+                ]);
+            }
+
+            $res = [
+                'sukses' => '1',
+                'undfhSO' => $undfhSO,
+                'undfhSOarr' => $undfhSOarr
+            ];
+            $this->db->transCommit();
+        } catch (\Exception $e) {
+            $res = [
+                'sukses' => '0',
+                'err' => $e->getMessage(),
+                'traceString' => $e->getTraceAsString()
+            ];
+            $this->db->transRollback();
+        }
+        $this->db->transComplete();
+        $res['csrfToken'] = csrf_hash();
+        echo json_encode($res);
     }
 }
