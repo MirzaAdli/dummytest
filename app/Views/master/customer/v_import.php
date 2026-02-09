@@ -97,7 +97,7 @@
 
     async function sendData(arr, isfinish = 'f') {
         //untuk delay
-        // await sleep(2000);
+        await sleep(2000);
         //update progress jumlah data yang dikiirm
         let textproses = $("#totalsent").text();
         $("#totalsent").text(formatRupiah(exp_number(textproses) + arr.length));

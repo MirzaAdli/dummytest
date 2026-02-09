@@ -80,14 +80,14 @@
     }
 
     $(document).ready(function() {
-        $("#importexcelSO").on('submit', function(e) {
+        $("#importexcel").on('submit', function(e) {
             e.preventDefault();
             $(".button-import").attr('disabled', 'disabled');
-            $("#excelfileSO").attr('onchange', 'getSOFiles(event)');
+            $("#excelfile").attr('onchange', 'getSOFiles(event)');
             $("#btn-close-modaldetail").addClass('hiding')
-            $("#excelfileSO").trigger('change');
+            $("#excelfile").trigger('change');
             $("#loading-alltrans").removeClass('hiding');
-            $('#excelfileSO').attr('disabled', 'disabled')
+            $('#excelfile').attr('disabled', 'disabled')
             return false;
         })
     })
@@ -95,6 +95,7 @@
     undfhSO = 0
 
     async function sendSOData(arr, isfinish = 'f') {
+        await sleep(2000);
         let textproses = $("#totalsent").text();
         $("#totalsent").text(formatRupiah(exp_number(textproses) + arr.length));
 
@@ -108,7 +109,7 @@
             },
             async: true,
             success: function(res) {
-                $('#excelfileSO').removeAttr('disabled');
+                $('#excelfile').removeAttr('disabled');
                 $("#csrf_token").val(encrypter(res.csrfToken));
                 undfhSO += res.undfhSO
                 if (isfinish == 't') {

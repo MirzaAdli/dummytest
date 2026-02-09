@@ -80,7 +80,6 @@ class SalesOrder extends BaseController
             return [
                 'id'    => $p['id'],
                 'text'  => $p['productname'],
-                'price' => $p['price'],
             ];
         }, $items);
 
@@ -115,12 +114,10 @@ class SalesOrder extends BaseController
         $arrColumn   = [null, "h.transcode", "h.transdate", "c.customername", "h.grandtotal", "h.description"];
         $columnName  = $arrColumn[$columnIndex] ?? "h.transcode";
 
-        // ambil filter dari request
         $dateFrom   = $this->request->getPost('dateFrom');
         $dateTo     = $this->request->getPost('dateTo');
         $customerid = $this->request->getPost('customerid');
 
-        // panggil Datatables helper dengan instance model
         $table = Datatables::method([$this->salesModel, 'datatable'], 'searchable')
             ->setParams([
                 [
@@ -133,7 +130,6 @@ class SalesOrder extends BaseController
             ])
             ->make();
 
-        // format row output
         $table->updateRow(function ($db, $no) {
             $btn_edit = "<button type='button' class='btn btn-sm btn-warning'
             onclick=\"window.location.href='" . getURL('salesorder/form/' . encrypting($db->id)) . "'\">
@@ -160,6 +156,7 @@ class SalesOrder extends BaseController
 
         return $table->toJson();
     }
+
 
     public function detaildatatable($param = "")
     {
@@ -837,7 +834,7 @@ class SalesOrder extends BaseController
         foreach ($headers as $h) {
             $sheet->setCellValue("A{$row}", $h['transcode'] ?? '');
             $sheet->mergeCells("A$row:B$row");
-            $sheet->setCellValue("C{$row}", isset($h['transdate']) ? date('d M Y', strtotime($h['transdate'])) : '');
+            $sheet->setCellValue("C{$row}", isset($h['transdate']) ? date('d F Y', strtotime($h['transdate'])) : '');
             $sheet->mergeCells("C$row:D$row");
             $sheet->setCellValue("E{$row}", $h['customername'] ?? '');
             $sheet->mergeCells("E$row:F$row");
@@ -932,7 +929,6 @@ class SalesOrder extends BaseController
             $undfhSOarr = [];
 
             foreach ($datas as $dt) {
-                // validasi minimal kolom (Transcode, Transdate, Customer, GrandTotal)
                 if (empty($dt[0]) || empty($dt[1]) || empty($dt[2]) || empty($dt[3])) {
                     $undfhSO++;
                     $undfhSOarr[] = $dt[0] ?? '-';
@@ -946,6 +942,7 @@ class SalesOrder extends BaseController
                     $undfhSOarr[] = $dt[0];
                     continue;
                 }
+                
 
                 // Simpan SalesOrder Header
                 $this->salesModel->insert([
@@ -975,8 +972,15 @@ class SalesOrder extends BaseController
             ];
             $this->db->transRollback();
         }
-        $this->db->transComplete();
         $res['csrfToken'] = csrf_hash();
         echo json_encode($res);
+    }
+    
+    public function downloadTemplate()
+    {
+        return $this->response->download(
+            FCPATH . 'public/downloadable/TemplateSalesOrder.xlsx',
+            null
+        );
     }
 }

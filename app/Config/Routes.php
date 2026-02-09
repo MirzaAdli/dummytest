@@ -133,6 +133,7 @@ $routes->group('salesorder', function ($routes) {
     // Import
     $routes->add('formImport', 'SalesOrder::formImport', $this->noauth);
     $routes->add('importExcel', 'SalesOrder::importExcel', $this->noauth);
+    $routes->add('downloadTemplate', 'SalesOrder::downloadTemplate');
 
     // PDF
     $routes->add('pdf', 'SalesOrder::printPDF', $this->noauth);

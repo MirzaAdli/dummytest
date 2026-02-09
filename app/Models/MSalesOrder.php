@@ -108,4 +108,9 @@ class MSalesOrder extends Model
 
         return $row ? (int) $row->id : null;
     }
+    
+    public function existsByTranscode($transcode)
+    {
+        return $this->where('transcode', $transcode)->countAllResults() > 0;
+    }
 }

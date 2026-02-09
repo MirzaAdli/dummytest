@@ -3,7 +3,14 @@
 
 <div class="main-content content margin-t-4">
     <div class="card-header d-flex align-items-center" style="gap:10px;">
-        <div class="card-header d-flex" style="gap:35px;">
+        <div class="card-header d-flex" style="gap:30px;">
+            <div class="form-floating" style="width:150px;">
+                <label for="customerid" style="font-size:0.75rem;">Customer</label>
+                <select id="customerid" name="customerid"
+                    class="form-select form-select-sm rounded">
+                </select>
+            </div>
+
             <!-- Filter tanggal -->
             <div class="d-flex flex-column" style="width:150px;">
                 <label for="dateFrom" class="form-label mb-0" style="font-size:0.75rem;">From Date</label>
@@ -15,13 +22,6 @@
                 <label for="dateTo" class="form-label mb-0" style="font-size:0.75rem;">To Date</label>
                 <input type="date" id="dateTo" name="dateTo"
                     class="form-control form-control-sm rounded" style="width:110px;">
-            </div>
-
-            <div class="form-floating" style="width:150px;">
-                <label for="customerid" style="font-size:0.75rem;">Customer</label>
-                <select id="customerid" name="customerid"
-                    class="form-select form-select-sm rounded">
-                </select>
             </div>
 
             <div class="d-flex align-items-end ms-auto gap-2">
@@ -126,12 +126,10 @@
         });
 
         $('#btnReset').on('click', function() {
-            // kosongkan semua filter
             $('#dateFrom').val('');
             $('#dateTo').val('');
-            $('#customerid').val('').trigger('change'); // kalau pakai Select2
+            $('#customerid').val('').trigger('change');
 
-            // reload DataTable tanpa filter
             tbl.ajax.reload();
         });
 
@@ -159,11 +157,11 @@
                 url: '<?= base_url("salesorder/table") ?>',
                 type: 'POST',
                 data: function(d) {
-                    // hanya tambahkan filter custom + CSRF
                     d.dateFrom = $('#dateFrom').val();
                     d.dateTo = $('#dateTo').val();
                     d.customerid = $('#customerid').val();
                     d['<?= csrf_token() ?>'] = '<?= csrf_hash() ?>';
+                    return d;
                 }
             }
         });
