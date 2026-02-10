@@ -55,6 +55,8 @@ class MSalesOrder extends Model
                 ->where('h.transdate <=', $params['dateTo']);
         } elseif (!empty($params['dateFrom'])) {
             $x->where("h.transdate >=", $params['dateFrom']);
+        } elseif (!empty($params['dateTo'])) {
+            $x->where("h.transdate <=", $params['dateTo']);
         }
 
         // Filter customer
@@ -108,7 +110,7 @@ class MSalesOrder extends Model
 
         return $row ? (int) $row->id : null;
     }
-    
+
     public function existsByTranscode($transcode)
     {
         return $this->where('transcode', $transcode)->countAllResults() > 0;

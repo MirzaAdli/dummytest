@@ -4,13 +4,6 @@
 <div class="main-content content margin-t-4">
     <div class="card-header d-flex align-items-center" style="gap:10px;">
         <div class="card-header d-flex" style="gap:30px;">
-            <div class="form-floating" style="width:150px;">
-                <label for="customerid" style="font-size:0.75rem;">Customer</label>
-                <select id="customerid" name="customerid"
-                    class="form-select form-select-sm rounded">
-                </select>
-            </div>
-
             <!-- Filter tanggal -->
             <div class="d-flex flex-column" style="width:150px;">
                 <label for="dateFrom" class="form-label mb-0" style="font-size:0.75rem;">From Date</label>
@@ -22,6 +15,13 @@
                 <label for="dateTo" class="form-label mb-0" style="font-size:0.75rem;">To Date</label>
                 <input type="date" id="dateTo" name="dateTo"
                     class="form-control form-control-sm rounded" style="width:110px;">
+            </div>
+
+            <div class="form-floating" style="width:150px;">
+                <label for="customerid" style="font-size:0.75rem;">Customer</label>
+                <select id="customerid" name="customerid"
+                    class="form-select form-select-sm rounded">
+                </select>
             </div>
 
             <div class="d-flex align-items-end ms-auto gap-2">
@@ -87,7 +87,7 @@
                 </div>
                 <hr>
                 <div class="modal-footer d-flex justify-content-center">
-                    <button class="btn btn-warning w-100" type="button" id="btnCancelExport">Cancel</button>
+                    <button class="btn btn-warning w-100" type="button" id="btnCancel">Cancel</button>
                 </div>
             </div>
         </div>
@@ -120,9 +120,8 @@
             }
         });
 
-        // Event tombol Filter
         $('#btnFilter').on('click', function() {
-            tbl.ajax.reload(null, false);
+            initDataTable();
         });
 
         $('#btnReset').on('click', function() {
@@ -130,16 +129,14 @@
             $('#dateTo').val('');
             $('#customerid').val('').trigger('change');
 
-            tbl.ajax.reload();
+            initDataTable();
         });
 
-        // Event Export
         $('#btnExport').on('click', function() {
             exportHeaderChunk();
         });
 
-        // Event Cancel Export
-        $('#btnCancelExport').on('click', function() {
+        $('#btnCancel').on('click', function() {
             cancelExport = true;
             if (currentRequest) currentRequest.abort();
             $("#modalExport").modal('hide');
@@ -167,7 +164,6 @@
         });
     }
 
-    // Submit data (form simpan)
     function submitData() {
         let link = $('#linksubmit').val(),
             transcode = $('#transcode').val(),
@@ -193,7 +189,7 @@
                 if (res.sukses === '1') {
                     $('#transcode, #transdate, #description').val("");
                     $('#customerid').val(null).trigger('change');
-                    tbl.ajax.reload(null, false);
+                    initDataTable();
                 }
             },
             error: function(xhr, ajaxOptions, thrownError) {
@@ -202,7 +198,6 @@
         });
     }
 
-    // Export chunked
     function exportHeaderChunk() {
         let limit = 500;
         let offset = 0;
@@ -274,7 +269,6 @@
                                 $("#progressPercent").text("100%");
                             },
                             error: function(xhr) {
-                                alert("Export gagal");
                             },
                             complete: function() {
                                 if (cancelExport) return;
@@ -284,7 +278,6 @@
                     }
                 });
             }
-
             loadChunk();
         });
     }

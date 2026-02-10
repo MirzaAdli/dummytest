@@ -935,14 +935,18 @@ class SalesOrder extends BaseController
                     continue;
                 }
 
-                // mapping customername ke customerid
                 $customerid = $this->salesModel->findCustomerId($dt[2]);
                 if (!$customerid) {
                     $undfhSO++;
                     $undfhSOarr[] = $dt[0];
                     continue;
                 }
-                
+
+                if ($this->salesModel->existsByTranscode(trim($dt[0]))) {
+                    $undfhSO++;
+                    $undfhSOarr[] = $dt[0];
+                    continue;
+                }
 
                 // Simpan SalesOrder Header
                 $this->salesModel->insert([
@@ -975,7 +979,7 @@ class SalesOrder extends BaseController
         $res['csrfToken'] = csrf_hash();
         echo json_encode($res);
     }
-    
+
     public function downloadTemplate()
     {
         return $this->response->download(
