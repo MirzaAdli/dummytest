@@ -811,50 +811,45 @@ class SalesOrder extends BaseController
         // Judul
         $sheet->setCellValue('A1', 'SALES ORDER')
             ->getStyle('A1')->getFont()->setBold(true)->setSize(14);
-        $sheet->mergeCells('A1:M1');
+        $sheet->mergeCells('A1:E1');
         $sheet->getStyle('A1')->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
 
         // Header kolom
         $sheet->setCellValue('A3', 'Transcode');
-        $sheet->mergeCells('A3:B3');
-        $sheet->setCellValue('C3', 'Transdate');
-        $sheet->mergeCells('C3:D3');
-        $sheet->setCellValue('E3', 'Customer');
-        $sheet->mergeCells('E3:F3');
-        $sheet->setCellValue('G3', 'Grand Total');
-        $sheet->mergeCells('G3:H3');
-        $sheet->setCellValue('I3', 'Description');
-        $sheet->mergeCells('I3:M3');
+        $sheet->setCellValue('B3', 'Transdate');
+        $sheet->setCellValue('C3', 'Customer');
+        $sheet->setCellValue('D3', 'Grand Total');
+        $sheet->setCellValue('E3', 'Description');
 
-        $sheet->getStyle('A3:M3')->applyFromArray($headerStyle);
-        $sheet->getStyle('A3:M3')->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle('A3:E3')->applyFromArray($headerStyle);
+        $sheet->getStyle('A3:E3')->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+
+        $sheet->getColumnDimension('A')->setWidth(20); // Transcode
+        $sheet->getColumnDimension('B')->setWidth(15); // Transdate
+        $sheet->getColumnDimension('C')->setWidth(25); // Customer
+        $sheet->getColumnDimension('D')->setWidth(18); // Grand Total
+        $sheet->getColumnDimension('E')->setWidth(40); // Description
 
         // Isi data header
         $row = 4;
         foreach ($headers as $h) {
             $sheet->setCellValue("A{$row}", $h['transcode'] ?? '');
-            $sheet->mergeCells("A$row:B$row");
-            $sheet->setCellValue("C{$row}", isset($h['transdate']) ? date('d F Y', strtotime($h['transdate'])) : '');
-            $sheet->mergeCells("C$row:D$row");
-            $sheet->setCellValue("E{$row}", $h['customername'] ?? '');
-            $sheet->mergeCells("E$row:F$row");
+            $sheet->setCellValue("B{$row}", isset($h['transdate']) ? date('Y-m-d', strtotime($h['transdate'])) : '');
+            $sheet->setCellValue("C{$row}", $h['customername'] ?? '');
             $grandtotal = isset($h['grandtotal']) ? number_format($h['grandtotal'], 2, ',', '.') : '0';
-            $sheet->setCellValue("G{$row}", 'Rp ' . $grandtotal);
-            $sheet->mergeCells("G{$row}:H{$row}");
-            $sheet->getStyle("G{$row}:H{$row}")
-                ->getAlignment()
-                ->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_RIGHT);
-            $sheet->getStyle("G$row:H$row")->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT);
-            $sheet->setCellValue("I{$row}", $h['description'] ?? '');
-            $sheet->mergeCells("I$row:M$row");
+            $sheet->setCellValue("D{$row}", $grandtotal);
+            $sheet->getStyle("E$row")->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT);
+            $sheet->setCellValue("E{$row}", $h['description'] ?? '');
+            $sheet->mergeCells("E$row:E$row");
 
-            $sheet->getStyle("A{$row}:M{$row}")->applyFromArray([
+            $sheet->getStyle("A{$row}:E{$row}")->applyFromArray([
                 'borders' => [
                     'allBorders' => ['borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN],
                 ],
             ]);
             $row++;
         }
+
 
         // Output ke browser
         $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);

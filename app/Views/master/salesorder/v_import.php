@@ -88,10 +88,10 @@
                 keys++;
                 arr.push([
                     ws['A' + o]?.v ?? '', // Transcode
-                    ws['C' + o]?.v ?? '', // Transdate
-                    ws['E' + o]?.v ?? '', // Customer Name
-                    ws['G' + o]?.v ?? '', // Grand Total
-                    ws['I' + o]?.v ?? '', // Description
+                    ws['B' + o]?.v ?? '', // Transdate
+                    ws['C' + o]?.v ?? '', // Customer Name
+                    ws['D' + o]?.v ?? '', // Grand Total
+                    ws['E' + o]?.v ?? '', // Description
                 ]);
             }
 

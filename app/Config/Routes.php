@@ -151,6 +151,17 @@ $routes->group('salesorder', function ($routes) {
     $routes->post('product/list', 'SalesOrder::productList', $this->noauth);
     $routes->post('uom/list', 'SalesOrder::uomList', $this->noauth);
 });
+
+//Routes Master File
+$routes->group('file', function ($routes) {
+    $routes->add('', 'File::index', $this->noauth);
+    $routes->add('table', 'File::datatable', $this->noauth);
+    $routes->add('form', 'File::form', $this->noauth);
+    $routes->add('form/(:any)', 'File::form/$1', $this->noauth);
+    $routes->add('add', 'File::upload', $this->noauth);
+    $routes->add('update', 'File::updateFile', $this->noauth);
+    $routes->add('delete', 'File::deleteFile', $this->noauth);
+});
 // -------------------------------------------------------->
 // Log Out
 $routes->add('logout', 'User::logOut');
