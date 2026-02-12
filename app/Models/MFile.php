@@ -14,8 +14,24 @@ class MFile extends Model
     protected $allowedFields = [
         'filename',
         'filerealname',
-        'filedirectory'
+        'filedirectory',
+        'created_date',
+        'created_by',
+        'update_date',
+        'update_by',
+        'isactive'
     ];
+
+    public function searchable()
+    {
+        return [
+            null,
+            "filerealname",
+            "filedirectory",
+            "created_date",
+            null,
+        ];
+    }
 
     public function __construct()
     {
@@ -24,18 +40,32 @@ class MFile extends Model
         $this->builder = $this->dbs->table($this->table . ' f');
     }
 
+    public function datatable()
+    {
+        return $this->builder
+            ->select('f.*, u.fullname AS created_name, u2.fullname AS updated_name')
+            ->join('msuser u', 'u.id = f.created_by', 'left')
+            ->join('msuser u2', 'u2.id = f.update_by', 'left')
+            ->orderBy('f.fileid', 'asc');
+    }
+
+    public function getOne($fileid)
+    {
+        return $this->builder->where("f.fileid", $fileid)->get()->getRowArray();
+    }
+
     public function store($data)
     {
         return $this->builder->insert($data);
     }
 
-    public function edit($column, $value)
+    public function edit($data, $id)
     {
-        return $this->builder->where("f.fileid", $column)->update($value);
+        return $this->builder->where('fileid', $id)->update($data);
     }
 
-    public function destroy($column, $value)
+    public function destroy($id)
     {
-        return $this->builder->delete([$column => $value]);
+        return $this->builder->where('fileid', $id)->delete();
     }
 }

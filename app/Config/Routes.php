@@ -158,9 +158,10 @@ $routes->group('file', function ($routes) {
     $routes->add('table', 'File::datatable', $this->noauth);
     $routes->add('form', 'File::form', $this->noauth);
     $routes->add('form/(:any)', 'File::form/$1', $this->noauth);
-    $routes->add('add', 'File::upload', $this->noauth);
+    $routes->add('add', 'File::addFile', $this->noauth);
     $routes->add('update', 'File::updateFile', $this->noauth);
     $routes->add('delete', 'File::deleteFile', $this->noauth);
+    $routes->add('upload', 'File::uploadFile', $this->noauth);
 });
 // -------------------------------------------------------->
 // Log Out

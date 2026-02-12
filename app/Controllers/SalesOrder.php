@@ -150,6 +150,8 @@ class SalesOrder extends BaseController
                 $db->customername,
                 'Rp' . number_format($db->grandtotal, 2, ',', '.'),
                 $db->description,
+                date('d-F-Y H:i:s', strtotime($db->createddate)),
+                $db->createdby,
                 "<div style='display:flex;align-items:center;justify-content:center;'>$btn_pdf&nbsp;$btn_edit&nbsp;$btn_hapus</div>"
             ];
         });

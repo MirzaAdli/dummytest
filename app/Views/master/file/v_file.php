@@ -9,23 +9,59 @@
                     <i class="bx bx-plus-circle"></i> Add New
                 </button>
             </div>
-            <div class="card-body">
-                <div class="table-responsive margin-t-14p">
-                    <table class="table table-bordered table-responsive-lg table-master fs-7 w-100">
-                        <thead>
-                            <tr>
-                                <td class="tableheader">No</td>
-                                <td class="tableheader">File Name</td>
-                                <td class="tableheader">Description</td>
-                                <td class="tableheader">Actions</td>
-                            </tr>
-                        </thead>
-                        <tbody>
-                        </tbody>
-                    </table>
-                </div>
+            <div class="table-responsive margin-t-14p">
+                <table id="fileTable" class="table table-bordered table-master fs-7 w-100">
+                    <thead>
+                        <tr>
+                            <td class="tableheader">No</td>
+                            <td class="tableheader">File Name</td>
+                            <td class="tableheader">File Directory</td>
+                            <td class="tableheader">Created At</td>
+                            <td class="tableheader">Created By</td>
+                            <td class="tableheader">Actions</td>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
             </div>
         </div>
     </div>
 </div>
 <?= $this->include('template/v_footer') ?>
+<script>
+    $(document).ready(function() {
+        initDataTable();
+    });
+
+    function initDataTable() {
+        tbl = $('#fileTable').DataTable({
+            serverSide: true,
+            processing: true,
+            destroy: true,
+            ajax: {
+                url: '<?= base_url("file/table") ?>',
+                type: 'POST',
+            },
+            columns: [{
+                    data: 0
+                },
+                {
+                    data: 1
+                },
+                {
+                    data: 2
+                },
+                {
+                    data: 3
+                },
+                {
+                    data: 4
+                },
+                {
+                    data: 5
+                }
+            ]
+
+        });
+    }
+</script>
